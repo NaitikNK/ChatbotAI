@@ -1,0 +1,8 @@
+node_modules
+Dist
+dist
+.git
+.vscode
+.angular
+*.log
+coverage
