@@ -1,1 +1,14 @@
+/* Global reset to prevent unwanted scrollbars */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Ensure consistent box-sizing and prevent scroll from stray elements */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 /* You can add global styles to this file, and also import other style files */

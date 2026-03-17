@@ -1,0 +1,63 @@
+<div class="chat-container">
+  <div class="chat-header">
+    <button class="menu-btn" (click)="onToggleSidebar()" aria-label="Toggle sidebar">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <h2>Chat</h2>
+  </div>
+  <div class="messages" #messagesContainer>
+    @for (message of messages(); track $index) {
+      <div class="message" [class.user]="message.role === 'user'" [class.assistant]="message.role === 'assistant'">
+        <div class="message-content">{{ message.text }}</div>
+        
+        <div class="message-footer">
+          <span class="timestamp">{{ message.createdAt | date:'shortTime' }}</span>
+          @if (message.role === 'assistant') {
+            <button class="icon-btn" (click)="copyMessage(message.text)" title="Copy message" aria-label="Copy">
+              <span>📋</span>
+            </button>
+          }
+        </div>
+
+        @if (message.role === 'assistant' && $index === pendingYesNoPromptIndex) {
+          <div class="yesno-inline" role="group" aria-label="Choose an option">
+            <div class="yesno-options">
+              <label class="yesno-option">
+                <input type="radio" name="yesno" value="Yes" [(ngModel)]="yesNoSelection" [disabled]="busy()" />
+                Yes
+              </label>
+              <label class="yesno-option">
+                <input type="radio" name="yesno" value="No" [(ngModel)]="yesNoSelection" [disabled]="busy()" />
+                No
+              </label>
+            </div>
+            <button (click)="onSendYesNo()" [disabled]="busy() || !yesNoSelection">Send</button>
+          </div>
+        }
+      </div>
+    }
+    
+    @if (busy()) {
+      <div class="message assistant typing-indicator">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    }
+  </div>
+  <div class="input-area">
+    <textarea
+      [ngModel]="newMessage"
+      (ngModelChange)="onInputChange($event)"
+      (keydown.enter)="onEnterDown($event)"
+      placeholder="Type a message..."
+      [disabled]="busy() || showYesNoPrompt"
+      rows="1"
+      class="auto-expand"
+    ></textarea>
+    <button (click)="onSendMessage()" [disabled]="busy() || showYesNoPrompt">Send</button>
+    <button (click)="onClearChat()" class="clear-btn" [disabled]="busy()">Clear</button>
+  </div>
+</div>

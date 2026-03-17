@@ -1,0 +1,38 @@
+<div class="sidebar">
+  <div class="sidebar-header">
+    <h3>Chat History</h3>
+    <div class="header-buttons">
+      <button (click)="onNewChat()" class="new-chat-btn">New Chat</button>
+      <button
+        (click)="onDeleteAllChats()"
+        class="delete-all-btn"
+        *ngIf="chats().length > 1"
+      >
+        Delete All
+      </button>
+    </div>
+  </div>
+  <div class="chat-list">
+    @for (chat of chats(); track chat.id) {
+      <div
+        class="chat-item"
+        [class.active]="chat.id === currentChatId() && !!chat.title.trim()"
+        [class.untitled]="!chat.title.trim()"
+        (click)="onSelectChat(chat.id)"
+      >
+        <span class="chat-title">{{ chat.title }}</span>
+        <button
+          class="delete-btn"
+          (click)="onDeleteChat(chat.id, $event)"
+          aria-label="Delete chat"
+          *ngIf="chats().length > 1"
+        >
+          <svg class="trash-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3 6h18v2H3V6zm2 2h14v13c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2V8zm3 0h8v13H8V8zm2 2h4v9H10v-9z"/>
+            <path d="M9 4V2c0-.55.45-1 1-1h4c.55 0 1 .45 1 1v2H9z"/>
+          </svg>
+        </button>
+      </div>
+    }
+  </div>
+</div>
