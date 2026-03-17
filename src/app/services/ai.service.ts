@@ -6,7 +6,7 @@ type ChatApiResponse = { answer: string };
 
 @Injectable({ providedIn: 'root' })
 export class AiService {
-  private readonly baseUrl = 'https://localhost:7079';
+  private readonly baseUrl = 'https://chatbot-be-tjge.onrender.com';
 
   constructor(private readonly http: HttpClient) {}
 
