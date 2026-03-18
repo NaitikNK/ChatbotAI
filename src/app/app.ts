@@ -6,6 +6,7 @@ import { LoaderComponent } from './loader/loader';
 import { AiService } from './services/ai.service';
 import { Chat, ChatMessage } from './models/chat';
 import { HttpErrorResponse } from '@angular/common/http';
+import { UI_TIMINGS } from './constants/ui-timings.constant';
 
 @Component({
   selector: 'app-root',
@@ -57,7 +58,7 @@ export class App {
       this.currentChatId.set(newId);
       this.closeSidebarOnMobile();
       this.isLoading.set(false);
-    }, 300);
+    }, UI_TIMINGS.LOADING_DELAY);
   }
 
   onSendMessage(message: string) {
@@ -156,6 +157,11 @@ export class App {
   }
 
   private getUserFriendlyError(err: unknown): string {
+    // If the error has a message (from API error response), show it
+    if (err instanceof Error && err.message) {
+      return err.message;
+    }
+
     if (err instanceof HttpErrorResponse) {
       if (err.status === 0) {
         return 'Oops! 🌐 I am having trouble connecting to the server right now. Please try again in a moment!';
@@ -163,6 +169,11 @@ export class App {
 
       if (err.status >= 500) {
         return 'Uh oh! 🛠️ Something went wrong on my end. Please give me a second and try again!';
+      }
+
+      // Try to get error message from response body
+      if (err.error && typeof err.error === 'object' && err.error.error) {
+        return err.error.error;
       }
 
       return 'Hmm, something unexpected happened. 🤔 Please try again!';
@@ -183,7 +194,7 @@ export class App {
         )
       );
       this.isLoading.set(false);
-    }, 300);
+    }, UI_TIMINGS.LOADING_DELAY);
   }
 
   onDeleteChat(chatId: string) {
@@ -243,7 +254,7 @@ export class App {
         this.pendingDeleteAction!();
         this.pendingDeleteAction = null;
         this.isLoading.set(false);
-      }, 500);
+      }, UI_TIMINGS.DELETE_DELAY);
     }
   }
 

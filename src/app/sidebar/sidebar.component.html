@@ -2,11 +2,12 @@
   <div class="sidebar-header">
     <h3>Chat History</h3>
     <div class="header-buttons">
-      <button (click)="onNewChat()" class="new-chat-btn">New Chat</button>
+      <button (click)="onNewChat()" class="new-chat-btn" aria-label="Create new chat">New Chat</button>
       <button
         (click)="onDeleteAllChats()"
         class="delete-all-btn"
         *ngIf="chats().length > 1"
+        aria-label="Delete all chats"
       >
         Delete All
       </button>
@@ -20,7 +21,7 @@
         [class.untitled]="!chat.title.trim()"
         (click)="onSelectChat(chat.id)"
       >
-        <span class="chat-title">{{ chat.title }}</span>
+        <span class="chat-title">{{ chat.title || 'New Chat' }}</span>
         <button
           class="delete-btn"
           (click)="onDeleteChat(chat.id, $event)"
