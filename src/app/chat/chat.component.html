@@ -24,16 +24,16 @@
         @if (message.role === 'assistant' && $index === pendingYesNoPromptIndex) {
           <div class="yesno-inline" role="group" aria-label="Choose an option">
             <div class="yesno-options">
-              <label class="yesno-option">
-                <input type="radio" name="yesno" value="Yes" [(ngModel)]="yesNoSelection" [disabled]="busy()" />
+              <label class="yesno-option" for="yes-option-{{ $index }}">
+                <input type="radio" id="yes-option-{{ $index }}" name="yesno-{{ $index }}" value="Yes" [(ngModel)]="yesNoSelection" [disabled]="busy()" />
                 Yes
               </label>
-              <label class="yesno-option">
-                <input type="radio" name="yesno" value="No" [(ngModel)]="yesNoSelection" [disabled]="busy()" />
+              <label class="yesno-option" for="no-option-{{ $index }}">
+                <input type="radio" id="no-option-{{ $index }}" name="yesno-{{ $index }}" value="No" [(ngModel)]="yesNoSelection" [disabled]="busy()" />
                 No
               </label>
             </div>
-            <button (click)="onSendYesNo()" [disabled]="busy() || !yesNoSelection">Send</button>
+            <button (click)="onSendYesNo()" [disabled]="busy() || !yesNoSelection" aria-label="Send selection">Send</button>
           </div>
         }
       </div>
@@ -57,7 +57,7 @@
       rows="1"
       class="auto-expand"
     ></textarea>
-    <button (click)="onSendMessage()" [disabled]="busy() || showYesNoPrompt">Send</button>
-    <button (click)="onClearChat()" class="clear-btn" [disabled]="busy()">Clear</button>
+    <button (click)="onSendMessage()" [disabled]="busy() || showYesNoPrompt" aria-label="Send message">Send</button>
+    <button (click)="onClearChat()" class="clear-btn" [disabled]="busy()" aria-label="Clear chat">Clear</button>
   </div>
 </div>

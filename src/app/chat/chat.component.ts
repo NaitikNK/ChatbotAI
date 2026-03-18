@@ -47,7 +47,9 @@ export class ChatComponent implements AfterViewChecked {
   }
 
   copyMessage(text: string) {
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(text).catch((err) => {
+      console.error('Failed to copy message:', err);
+    });
   }
 
   onEnterDown(event: Event) {
