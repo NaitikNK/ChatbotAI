@@ -2,7 +2,15 @@
   <div class="sidebar-header">
     <h3>Chat History</h3>
     <div class="header-buttons">
-      <button (click)="onNewChat()" class="new-chat-btn" aria-label="Create new chat">New Chat</button>
+      <a routerLink="/policies" class="policies-sidebar-btn" aria-label="View policies" *ngIf="!isPoliciesPage()">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+          <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+        </svg>
+        Policies
+      </a>
+    </div>
+    <div class="header-buttons" *ngIf="!showGoToChat()">
+      <button (click)="onNewChat()" class="new-chat-btn" aria-label="Create new chat" [disabled]="!canNewChat()">New Chat</button>
       <button
         (click)="onDeleteAllChats()"
         class="delete-all-btn"
@@ -11,6 +19,19 @@
       >
         Delete All
       </button>
+    </div>
+    <div class="header-buttons" *ngIf="showCreatePolicy()">
+      <button (click)="onCreatePolicy()" class="new-policy-btn" aria-label="Create new policy">
+        <span>+</span> Create Policy
+      </button>
+    </div>
+    <div class="header-buttons" *ngIf="showGoToChat()">
+      <a routerLink="/chat" class="back-to-chat-btn">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+          <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+        </svg>
+        Back to Chat
+      </a>
     </div>
   </div>
   <div class="chat-list">

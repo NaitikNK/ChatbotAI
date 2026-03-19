@@ -1,0 +1,130 @@
+<div class="policy-detail-wrapper">
+  <div class="sidebar-overlay" [class.show]="sidebarOpen()" (click)="onToggleSidebar()"></div>
+  <app-sidebar
+    [chats]="chatStore.chats()"
+    [currentChatId]="chatStore.currentChatId()"
+    [showGoToChat]="true"
+    [canNewChat]="chatStore.canCreateNewChat()"
+    (selectChat)="onSelectChat($event)"
+    (newChat)="onNewChat()"
+    (deleteChat)="onDeleteChat($event)"
+    (deleteAllChats)="onDeleteAllChats()"
+    [class.open]="sidebarOpen()"
+  ></app-sidebar>
+  <div class="policy-detail-container">
+    <div class="policy-detail-header">
+      <button class="menu-btn" (click)="onToggleSidebar()" aria-label="Toggle sidebar">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <h2>Policy Details</h2>
+    </div>
+    <div class="policy-detail-content">
+      @if (isLoading()) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading policy details...</p>
+        </div>
+      } @else if (policy()) {
+        <div class="policy-card">
+          <div class="policy-card-header">
+            <div>
+              <h3>{{ policy()!.firstName }} {{ policy()!.lastName }}</h3>
+              <p class="policy-subtitle">Policy #{{ policy()!.policyNumber }}</p>
+            </div>
+            <span class="policy-type-badge" [class]="'policy-type-' + policy()!.policyType">
+              {{ getPolicyTypeName(policy()!.policyType) }}
+            </span>
+          </div>
+          <div class="policy-card-body">
+            <div class="detail-section">
+              <h4>Personal Information</h4>
+              <div class="detail-grid">
+                <div class="detail-item">
+                  <label>Email:</label>
+                  <span>{{ policy()!.email }}</span>
+                </div>
+                <div class="detail-item">
+                  <label>Phone:</label>
+                  <span>{{ policy()!.phoneNumber || 'N/A' }}</span>
+                </div>
+                <div class="detail-item">
+                  <label>Date of Birth:</label>
+                  <span>{{ policy()!.dateOfBirth ? (policy()!.dateOfBirth | date:'MMMM d, y') : 'N/A' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <h4>Policy Information</h4>
+              <div class="detail-grid">
+                <div class="detail-item">
+                  <label>Policy Number:</label>
+                  <span>{{ policy()!.policyNumber }}</span>
+                </div>
+                <div class="detail-item">
+                  <label>Policy Name:</label>
+                  <span>{{ getPolicyNameLabel(policy()!.policyName) }}</span>
+                </div>
+                <div class="detail-item">
+                  <label>Policy Type:</label>
+                  <span>{{ getPolicyTypeName(policy()!.policyType) }}</span>
+                </div>
+              </div>
+            </div>
+
+            @if (policy()!.address || policy()!.city || policy()!.state || policy()!.postalCode || policy()!.country) {
+              <div class="detail-section">
+                <h4>Address Information</h4>
+                <div class="detail-grid">
+                  <div class="detail-item full-width">
+                    <label>Address:</label>
+                    <span>{{ policy()!.address || 'N/A' }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>City:</label>
+                    <span>{{ policy()!.city || 'N/A' }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>State:</label>
+                    <span>{{ policy()!.state || 'N/A' }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Postal Code:</label>
+                    <span>{{ policy()!.postalCode || 'N/A' }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <label>Country:</label>
+                    <span>{{ policy()!.country || 'N/A' }}</span>
+                  </div>
+                </div>
+              </div>
+            }
+
+            <div class="detail-section">
+              <h4>Metadata</h4>
+              <div class="detail-grid">
+                <div class="detail-item">
+                  <label>Created:</label>
+                  <span>{{ policy()!.createdAt | date:'MMMM d, y h:mm a' }}</span>
+                </div>
+                @if (policy()!.updatedAt) {
+                  <div class="detail-item">
+                    <label>Last Updated:</label>
+                    <span>{{ policy()!.updatedAt | date:'MMMM d, y h:mm a' }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      } @else {
+        <div class="error-state">
+          <p>Policy not found</p>
+          <button class="btn btn-primary" (click)="goBack()">Go Back</button>
+        </div>
+      }
+    </div>
+  </div>
+</div>
