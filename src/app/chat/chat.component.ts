@@ -62,8 +62,9 @@ export class ChatComponent implements AfterViewChecked, OnDestroy {
     // Load policy types
     this.policyService.getPolicyTypes().subscribe(types => {
       this.policyTypes.set(types);
-      if (policy?.policyType) {
-        this.loadPolicyNames(policy.policyType, policy.policyName);
+      const typeToLoad = policy?.policyTypeId || policy?.policyType;
+      if (typeToLoad) {
+        this.loadPolicyNames(typeToLoad, policy?.policyNameId || policy?.policyName);
       }
     });
 
@@ -79,8 +80,8 @@ export class ChatComponent implements AfterViewChecked, OnDestroy {
       lastName: [policy?.lastName || '', [Validators.required]],
       policyNumber: [policy?.policyNumber || '', [Validators.required]],
       email: [policy?.email || '', [Validators.required, Validators.email]],
-      policyType: [policy?.policyType || '', [Validators.required]],
-      policyName: [policy?.policyName || '', [Validators.required]],
+      policyType: [policy?.policyTypeId?.toString() || policy?.policyType || '', [Validators.required]],
+      policyName: [policy?.policyNameId?.toString() || policy?.policyName || '', [Validators.required]],
       phoneNumber: [policy?.phoneNumber || ''],
       address: [policy?.address || ''],
       city: [policy?.city || ''],
@@ -105,8 +106,13 @@ export class ChatComponent implements AfterViewChecked, OnDestroy {
   private loadPolicyNames(typeId: string | number, initialName?: any) {
     this.policyService.getPolicyNames(typeId).subscribe(names => {
       this.policyNames.set(names);
-      if (initialName && names.some(n => n.value === initialName.toString())) {
-        this.policyForm.get('policyName')?.setValue(initialName);
+      if (initialName) {
+        // Try to match by value (ID) or label (Name)
+        const initialStr = initialName.toString();
+        const found = names.find(n => n.value === initialStr || n.label === initialStr);
+        if (found) {
+          this.policyForm.get('policyName')?.setValue(found.value);
+        }
       }
     });
   }

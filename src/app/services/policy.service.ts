@@ -45,7 +45,9 @@ export interface Policy {
   lastName: string;
   policyNumber: string;
   email: string;
+  policyTypeId?: number;
   policyType: string | number;
+  policyNameId?: number;
   policyName?: string | number;
   phoneNumber?: string;
   address?: string;
