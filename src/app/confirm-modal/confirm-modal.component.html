@@ -1,0 +1,35 @@
+@if (confirmService.visible()) {
+  <div class="modal-overlay" (click)="confirmService.onCancel()">
+    <div class="modal-container" [class]="'modal-' + confirmService.config().type" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-icon">
+          @if (confirmService.config().type === 'danger') {
+            <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+            </svg>
+          } @else if (confirmService.config().type === 'warning') {
+            <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
+              <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+            </svg>
+          } @else {
+            <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+            </svg>
+          }
+        </div>
+        <h3>{{ confirmService.config().title }}</h3>
+      </div>
+      <div class="modal-body">
+        <p>{{ confirmService.config().message }}</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-cancel" (click)="confirmService.onCancel()">
+          {{ confirmService.config().cancelText }}
+        </button>
+        <button class="btn btn-confirm" [class]="'btn-' + confirmService.config().type" (click)="confirmService.onConfirm()">
+          {{ confirmService.config().confirmText }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

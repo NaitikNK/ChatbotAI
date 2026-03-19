@@ -1,0 +1,33 @@
+<div class="app-container" [class.loading]="chatStore.isLoading()">
+  <div
+    class="sidebar-overlay"
+    [class.show]="sidebarOpen()"
+    (click)="onToggleSidebar()"
+  ></div>
+  <app-sidebar
+    [chats]="chatStore.chats()"
+    [currentChatId]="chatStore.currentChatId()"
+    [canNewChat]="chatStore.canCreateNewChat()"
+    (selectChat)="onSelectChat($event)"
+    (newChat)="onNewChat()"
+    (deleteChat)="onDeleteChat($event)"
+    (deleteAllChats)="onDeleteAllChats()"
+    [class.open]="sidebarOpen()"
+  ></app-sidebar>
+  <app-chat
+    [messages]="chatStore.currentChat().messages"
+    [busy]="chatStore.isLoading()"
+    (sendMessage)="onSendMessage($event)"
+    (clearChat)="onClearChat()"
+    (toggleSidebar)="onToggleSidebar()"
+  ></app-chat>
+  <app-popup
+    [message]="popupMessage()"
+    [show]="showPopup()"
+    (confirm)="onPopupConfirm()"
+    (cancel)="onPopupCancel()"
+  ></app-popup>
+  <app-loader
+    [show]="chatStore.isLoading()"
+  ></app-loader>
+</div>

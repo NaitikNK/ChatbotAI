@@ -1,33 +1,4 @@
-﻿<div class="app-container" [class.loading]="isLoading()">
-  <div
-    class="sidebar-overlay"
-    [class.show]="sidebarOpen()"
-    (click)="onToggleSidebar()"
-  ></div>
-  <app-sidebar
-    [chats]="chats()"
-    [currentChatId]="currentChatId()"
-    (selectChat)="onSelectChat($event)"
-    (newChat)="onNewChat()"
-    (deleteChat)="onDeleteChat($event)"
-    (deleteAllChats)="onDeleteAllChats()"
-    [class.open]="sidebarOpen()"
-  ></app-sidebar>
-  <app-chat
-    [messages]="currentChat().messages"
-    [busy]="isLoading()"
-    (sendMessage)="onSendMessage($event)"
-    (clearChat)="onClearChat()"
-    (toggleSidebar)="onToggleSidebar()"
-  ></app-chat>
-  <app-popup
-    [message]="popupMessage()"
-    [show]="showPopup()"
-    (confirm)="onPopupConfirm()"
-    (cancel)="onPopupCancel()"
-  ></app-popup>
-  <app-loader
-    [show]="isLoading()"
-  ></app-loader>
-</div>
+<router-outlet></router-outlet>
+<app-toast></app-toast>
+<app-confirm-modal></app-confirm-modal>
 

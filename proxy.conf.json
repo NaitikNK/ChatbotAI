@@ -1,6 +1,6 @@
 {
   "/api": {
-    "target": "https://chatbot-be-tjge.onrender.com",
+    "target": "https://localhost:7079",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "info"

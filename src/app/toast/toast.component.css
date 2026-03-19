@@ -1,0 +1,130 @@
+:host {
+  display: block;
+}
+
+.toast-container {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none; /* Let clicks pass through empty space */
+}
+
+.toast {
+  pointer-events: auto; /* Re-enable clicks on the toast itself */
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background-color: var(--surface);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  width: 350px;
+  max-width: calc(100vw - 48px);
+  border-left: 4px solid transparent;
+  animation: slideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  transition: all 0.2s ease;
+}
+
+/* Base dark mode styles adjustment if needed */
+.toast {
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+}
+
+/* Success Type */
+.toast.success {
+  border-left-color: #10b981;
+}
+.toast.success .toast-icon {
+  color: #10b981;
+  background-color: rgba(16, 185, 129, 0.1);
+}
+
+/* Error Type */
+.toast.error {
+  border-left-color: #ef4444;
+}
+.toast.error .toast-icon {
+  color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+/* Info Type */
+.toast.info {
+  border-left-color: #3b82f6;
+}
+.toast.info .toast-icon {
+  color: #3b82f6;
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.toast-icon {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+}
+
+.toast-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.toast-content {
+  flex-grow: 1;
+  padding-top: 2px;
+}
+
+.toast-content p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.toast-close {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: all 0.2s ease;
+  margin-top: -2px;
+  margin-right: -4px;
+}
+
+.toast-close:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--text);
+}
+
+.toast-close svg {
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes slideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(100%) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}

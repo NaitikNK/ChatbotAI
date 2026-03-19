@@ -1,0 +1,235 @@
+<div class="modal-overlay" (click)="onCancel()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ isEditMode ? 'Edit Policy' : 'Create Policy' }}</h2>
+      <button class="close-btn" (click)="onCancel()" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form [formGroup]="policyForm" (ngSubmit)="onSubmit()">
+        <div class="form-section">
+          <h3>Personal Information</h3>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="firstName">First Name <span class="required">*</span></label>
+              <input
+                type="text"
+                id="firstName"
+                formControlName="firstName"
+                placeholder="Enter first name"
+                [class.error]="firstName?.invalid && firstName?.touched"
+              />
+              @if (firstName?.invalid && firstName?.touched) {
+                <div class="error-message">
+                  @if (firstName?.errors?.['required']) {
+                    <span>First name is required</span>
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="lastName">Last Name <span class="required">*</span></label>
+              <input
+                type="text"
+                id="lastName"
+                formControlName="lastName"
+                placeholder="Enter last name"
+                [class.error]="lastName?.invalid && lastName?.touched"
+              />
+              @if (lastName?.invalid && lastName?.touched) {
+                <div class="error-message">
+                  @if (lastName?.errors?.['required']) {
+                    <span>Last name is required</span>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="email">Email <span class="required">*</span></label>
+              <input
+                type="email"
+                id="email"
+                formControlName="email"
+                placeholder="Enter email address"
+                [class.error]="email?.invalid && email?.touched"
+              />
+              @if (email?.invalid && email?.touched) {
+                <div class="error-message">
+                  @if (email?.errors?.['required']) {
+                    <span>Email is required</span>
+                  }
+                  @if (email?.errors?.['email']) {
+                    <span>Please enter a valid email</span>
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="phoneNumber">Phone Number</label>
+              <input
+                type="tel"
+                id="phoneNumber"
+                formControlName="phoneNumber"
+                placeholder="Enter phone number"
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="dateOfBirth">Date of Birth</label>
+              <input
+                type="date"
+                id="dateOfBirth"
+                formControlName="dateOfBirth"
+                [class.error]="dateOfBirth?.invalid && dateOfBirth?.touched"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>Policy Information</h3>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="policyNumber">Policy Number <span class="required">*</span></label>
+              <input
+                type="text"
+                id="policyNumber"
+                formControlName="policyNumber"
+                placeholder="Enter policy number"
+                [class.error]="policyNumber?.invalid && policyNumber?.touched"
+              />
+              @if (policyNumber?.invalid && policyNumber?.touched) {
+                <div class="error-message">
+                  @if (policyNumber?.errors?.['required']) {
+                    <span>Policy number is required</span>
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="policyType">Policy Type <span class="required">*</span></label>
+              <select
+                id="policyType"
+                formControlName="policyType"
+                [class.error]="policyType?.invalid && policyType?.touched"
+              >
+                <option value="">Select Policy Type</option>
+                @for (type of policyTypes(); track type.value) {
+                  <option [value]="type.value">{{ type.label }}</option>
+                }
+              </select>
+              @if (policyType?.invalid && policyType?.touched) {
+                <div class="error-message">
+                  @if (policyType?.errors?.['required']) {
+                    <span>Policy type is required</span>
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="policyName">Policy Name <span class="required">*</span></label>
+              <select
+                id="policyName"
+                formControlName="policyName"
+                [class.error]="policyName?.invalid && policyName?.touched"
+              >
+                <option value="">Select Policy Name</option>
+                @for (name of policyNames(); track name.value) {
+                  <option [value]="name.value">{{ name.label }}</option>
+                }
+              </select>
+              @if (policyName?.invalid && policyName?.touched) {
+                <div class="error-message">
+                  @if (policyName?.errors?.['required']) {
+                    <span>Policy name is required</span>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>Address Information</h3>
+
+          <div class="form-row">
+            <div class="form-group full-width">
+              <label for="address">Address</label>
+              <input
+                type="text"
+                id="address"
+                formControlName="address"
+                placeholder="Enter street address"
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="city">City</label>
+              <input
+                type="text"
+                id="city"
+                formControlName="city"
+                placeholder="Enter city"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="state">State</label>
+              <input
+                type="text"
+                id="state"
+                formControlName="state"
+                placeholder="Enter state"
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="postalCode">Postal Code</label>
+              <input
+                type="text"
+                id="postalCode"
+                formControlName="postalCode"
+                placeholder="Enter postal code"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="country">Country</label>
+              <input
+                type="text"
+                id="country"
+                formControlName="country"
+                placeholder="Enter country"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="onCancel()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="policyForm.invalid || isSubmitting()">
+            {{ isSubmitting() ? 'Saving...' : 'Save' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
