@@ -27,15 +27,6 @@ export class Policies implements OnInit, OnDestroy {
   totalCount = signal(0);
   public readonly chatStore = inject(ChatStoreService);
   
-  // Form state
-  showCreateForm = signal(false);
-  policyForm!: FormGroup;
-  isSubmitting = signal(false);
-
-  policyTypes = signal<DropdownOption[]>([]);
-  policyNames = signal<DropdownOption[]>([]);
-  private typeChangeSub?: Subscription;
-
   // Lookup maps for displaying names instead of IDs
   private policyTypeMap = new Map<string, string>();
   private policyNameMap = new Map<string, string>();
@@ -80,7 +71,6 @@ export class Policies implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error loading policies:', error);
-          // Show error message to user (you can add a toast/notification here)
         }
       });
   }
@@ -98,7 +88,6 @@ export class Policies implements OnInit, OnDestroy {
   }
 
   async onDeletePolicy(policy: Policy) {
-    console.log('Delete policy:', policy);
     const confirmed = await this.confirmService.confirm({
       title: 'Delete Policy',
       message: `Are you sure you want to delete "${policy.firstName} ${policy.lastName}"?`,
@@ -114,7 +103,6 @@ export class Policies implements OnInit, OnDestroy {
         )
         .subscribe({
           next: () => {
-            // Reload policies after deletion
             this.loadPolicies();
             this.showToast('Policy deleted successfully!', 'success');
           },
@@ -145,86 +133,13 @@ export class Policies implements OnInit, OnDestroy {
     return Math.ceil(this.totalCount() / this.pageSize);
   }
 
-  // Form methods
   onCreatePolicy(): void {
-    this.showCreateForm.set(true);
-    this.initForm();
-  }
-
-  onCloseForm(): void {
-    this.showCreateForm.set(false);
-  }
-
-  initForm(): void {
-    // Load policy types
-    this.policyService.getPolicyTypes().subscribe(types => {
-      this.policyTypes.set(types);
-    });
-
-    this.policyForm = this.fb.group({
-      firstName: ['', [Validators.required]],
-      lastName: ['', [Validators.required]],
-      policyNumber: ['', [Validators.required]],
-      email: ['', [Validators.required, Validators.email]],
-      policyType: ['', [Validators.required]],
-      policyName: ['', [Validators.required]],
-      phoneNumber: [''],
-      address: [''],
-      city: [''],
-      state: [''],
-      postalCode: [''],
-      country: [''],
-      dateOfBirth: ['']
-    });
-
-    // Handle policy type changes
-    this.typeChangeSub?.unsubscribe();
-    this.typeChangeSub = this.policyForm.get('policyType')?.valueChanges.subscribe(typeId => {
-      if (typeId) {
-        this.policyService.getPolicyNames(typeId).subscribe(names => {
-          this.policyNames.set(names);
-        });
-      } else {
-        this.policyNames.set([]);
-        this.policyForm.get('policyName')?.setValue('');
-      }
-    }) as Subscription;
-  }
-
-  onSubmitPolicy(): void {
-    if (this.policyForm.invalid) {
-      this.policyForm.markAllAsTouched();
-      return;
-    }
-
-    this.isSubmitting.set(true);
-    const formValue = this.policyForm.value;
-
-    // No need for conversion, values should match API
-    const policyId = ''; // Not used here
-
-    this.policyService.createPolicy(formValue)
-      .pipe(
-        finalize(() => this.isSubmitting.set(false))
-      )
-      .subscribe({
-        next: () => {
-          this.showToast('Policy created successfully!', 'success');
-          this.showCreateForm.set(false);
-          this.loadPolicies();
-        },
-        error: (error) => {
-          console.error('Error creating policy:', error);
-          const errorMessage = error instanceof Error ? error.message : 'Failed to create policy. Please try again.';
-          this.showToast(errorMessage, 'error');
-        }
-      });
+    this.router.navigate(['/policies', 'new']);
   }
 
   showToast(message: string, type: 'success' | 'error' = 'success'): void {
     this.toastService.show(message, type);
   }
-  ngOnDestroy() {
-    this.typeChangeSub?.unsubscribe();
-  }
+
+  ngOnDestroy() {}
 }

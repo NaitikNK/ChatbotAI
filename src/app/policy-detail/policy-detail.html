@@ -24,14 +24,20 @@
       @if (isLoading()) {
         <div class="loading-state">
           <div class="spinner"></div>
-          <p>Loading policy details...</p>
+          <p>Gathering policy data...</p>
         </div>
       } @else if (policy()) {
         <div class="policy-card">
           <div class="policy-card-header">
             <div>
               <h3>{{ policy()!.firstName }} {{ policy()!.lastName }}</h3>
-              <p class="policy-subtitle">Policy #{{ policy()!.policyNumber }}</p>
+              <p class="policy-subtitle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" style="display: inline; vertical-align: text-bottom; margin-right: 4px;">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                Account ID: {{ policy()!.policyNumber }}
+              </p>
             </div>
             <span class="policy-type-badge" [class]="'policy-type-' + policy()!.policyType">
               {{ getPolicyTypeName(policy()!.policyType) }}
@@ -39,36 +45,42 @@
           </div>
           <div class="policy-card-body">
             <div class="detail-section">
-              <h4>Personal Information</h4>
+              <h4>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                Personal Profile
+              </h4>
               <div class="detail-grid">
                 <div class="detail-item">
-                  <label>Email:</label>
+                  <label>Full Email</label>
                   <span>{{ policy()!.email }}</span>
                 </div>
                 <div class="detail-item">
-                  <label>Phone:</label>
-                  <span>{{ policy()!.phoneNumber || 'N/A' }}</span>
+                  <label>Contact Number</label>
+                  <span>{{ policy()!.phoneNumber || 'Not Provided' }}</span>
                 </div>
                 <div class="detail-item">
-                  <label>Date of Birth:</label>
-                  <span>{{ policy()!.dateOfBirth ? (policy()!.dateOfBirth | date:'MMMM d, y') : 'N/A' }}</span>
+                  <label>Birthday</label>
+                  <span>{{ policy()!.dateOfBirth ? (policy()!.dateOfBirth | date:'MMMM d, y') : 'Not Provided' }}</span>
                 </div>
               </div>
             </div>
 
             <div class="detail-section">
-              <h4>Policy Information</h4>
+              <h4>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                Policy Enrollment
+              </h4>
               <div class="detail-grid">
                 <div class="detail-item">
-                  <label>Policy Number:</label>
+                  <label>Identification</label>
                   <span>{{ policy()!.policyNumber }}</span>
                 </div>
                 <div class="detail-item">
-                  <label>Policy Name:</label>
+                  <label>Plan Name</label>
                   <span>{{ getPolicyNameLabel(policy()!.policyName) }}</span>
                 </div>
                 <div class="detail-item">
-                  <label>Policy Type:</label>
+                  <label>Category</label>
                   <span>{{ getPolicyTypeName(policy()!.policyType) }}</span>
                 </div>
               </div>
@@ -76,52 +88,62 @@
 
             @if (policy()!.address || policy()!.city || policy()!.state || policy()!.postalCode || policy()!.country) {
               <div class="detail-section">
-                <h4>Address Information</h4>
+                <h4>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                  Location Details
+                </h4>
                 <div class="detail-grid">
                   <div class="detail-item full-width">
-                    <label>Address:</label>
+                    <label>Street Address</label>
                     <span>{{ policy()!.address || 'N/A' }}</span>
                   </div>
                   <div class="detail-item">
-                    <label>City:</label>
+                    <label>City / Town</label>
                     <span>{{ policy()!.city || 'N/A' }}</span>
                   </div>
                   <div class="detail-item">
-                    <label>State:</label>
+                    <label>State / Province</label>
                     <span>{{ policy()!.state || 'N/A' }}</span>
                   </div>
                   <div class="detail-item">
-                    <label>Postal Code:</label>
+                    <label>Zip / Postal</label>
                     <span>{{ policy()!.postalCode || 'N/A' }}</span>
-                  </div>
-                  <div class="detail-item">
-                    <label>Country:</label>
-                    <span>{{ policy()!.country || 'N/A' }}</span>
                   </div>
                 </div>
               </div>
             }
 
             <div class="detail-section">
-              <h4>Metadata</h4>
+              <h4>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                System Registry
+              </h4>
               <div class="detail-grid">
                 <div class="detail-item">
-                  <label>Created:</label>
+                  <label>First Registered</label>
                   <span>{{ policy()!.createdAt | date:'MMMM d, y h:mm a' }}</span>
                 </div>
                 @if (policy()!.updatedAt) {
                   <div class="detail-item">
-                    <label>Last Updated:</label>
+                    <label>Last Modified</label>
                     <span>{{ policy()!.updatedAt | date:'MMMM d, y h:mm a' }}</span>
                   </div>
                 }
               </div>
             </div>
+            
+            <div style="margin-top: 1rem; display: flex; justify-content: flex-end;">
+              <button class="btn btn-primary" (click)="goBack()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                Return to List
+              </button>
+            </div>
           </div>
         </div>
       } @else {
         <div class="error-state">
-          <p>Policy not found</p>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          <p>Policy record could not be found.</p>
           <button class="btn btn-primary" (click)="goBack()">Go Back</button>
         </div>
       }

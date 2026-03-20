@@ -1,5 +1,6 @@
-import { Component, input, output, ChangeDetectionStrategy, ViewChild, ElementRef, AfterViewChecked, signal, OnDestroy } from '@angular/core';
+import { Component, input, output, ChangeDetectionStrategy, ViewChild, ElementRef, AfterViewChecked, signal, OnDestroy, effect } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+// ... rest of imports
 import { DatePipe } from '@angular/common';
 import { ChatMessage } from '../models/chat';
 import { PolicyService, Policy, DropdownOption } from '../services/policy.service';
@@ -41,6 +42,7 @@ export class ChatComponent implements AfterViewChecked, OnDestroy {
 
   // Inline form state
   showCreatePolicyForm = signal(false);
+  pendingShowForm = signal(false); // New signal for timing fix
   policyForm!: FormGroup;
   isSubmitting = signal(false);
   editingPolicyId = signal<string | null>(null);
@@ -56,7 +58,19 @@ export class ChatComponent implements AfterViewChecked, OnDestroy {
     private readonly policyService: PolicyService,
     private readonly toastService: ToastService,
     private readonly confirmService: ConfirmService
-  ) {}
+  ) {
+    // Timing fix: Show form after AI stops being busy (with a small delay for readability)
+    effect(() => {
+      const isBusy = this.busy();
+      if (!isBusy && this.pendingShowForm()) {
+        setTimeout(() => {
+          this.showCreatePolicyForm.set(true);
+          this.initPolicyForm();
+          this.pendingShowForm.set(false);
+        }, 800);
+      }
+    }, { allowSignalWrites: true });
+  }
 
   initPolicyForm(policy?: any): void {
     // Load policy types
@@ -169,8 +183,7 @@ export class ChatComponent implements AfterViewChecked, OnDestroy {
       
       // Check for create policy keywords
       if (this.shouldShowCreateForm(message)) {
-        this.showCreatePolicyForm.set(true);
-        this.initPolicyForm();
+        this.pendingShowForm.set(true);
       }
       
       this.sendMessage.emit(message);

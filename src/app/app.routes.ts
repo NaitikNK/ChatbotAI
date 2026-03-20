@@ -8,7 +8,7 @@ export const routes: Routes = [
   { path: '', redirectTo: 'chat', pathMatch: 'full' },
   { path: 'chat', component: ChatLayout },
   { path: 'policies', component: Policies },
+  { path: 'policies/new', component: PolicyForm },
   { path: 'policies/:id', component: PolicyDetail },
-  { path: 'policies/:id/edit', component: PolicyForm },
-  { path: 'policies/new', component: PolicyForm }
+  { path: 'policies/:id/edit', component: PolicyForm }
 ];

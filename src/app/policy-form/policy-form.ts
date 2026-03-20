@@ -1,4 +1,4 @@
-import { Component, signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, signal, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -6,11 +6,13 @@ import { PolicyService, Policy, DropdownOption } from '../services/policy.servic
 import { finalize } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 import { ToastService } from '../services/toast.service';
+import { SidebarComponent } from '../sidebar/sidebar.component';
+import { ChatStoreService } from '../services/chat.store.service';
 
 @Component({
   selector: 'app-policy-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, SidebarComponent],
   templateUrl: './policy-form.html',
   styleUrl: './policy-form.css'
 })
@@ -19,10 +21,13 @@ export class PolicyForm implements OnInit, OnDestroy {
   isEditMode = false;
   policyId: string | null = null;
   isSubmitting = signal(false);
+  sidebarOpen = signal(false);
   
   policyTypes = signal<DropdownOption[]>([]);
   policyNames = signal<DropdownOption[]>([]);
   private typeChangeSub?: Subscription;
+
+  public readonly chatStore = inject(ChatStoreService);
 
   constructor(
     private readonly fb: FormBuilder,
@@ -30,95 +35,142 @@ export class PolicyForm implements OnInit, OnDestroy {
     private readonly route: ActivatedRoute,
     private readonly policyService: PolicyService,
     private readonly toastService: ToastService
-  ) {}
+  ) {
+    this.initFormSchema();
+  }
 
   ngOnInit(): void {
     this.policyId = this.route.snapshot.paramMap.get('id');
     this.isEditMode = !!this.policyId;
-    this.initForm();
-    
-    if (this.isEditMode && this.policyId) {
-      this.loadPolicy(this.policyId);
-    }
+    this.loadInitialData();
   }
 
-  initForm(policy?: any): void {
-    // Load policy types
-    this.policyService.getPolicyTypes().subscribe(types => {
-      this.policyTypes.set(types);
-      if (policy?.policyType) {
-        this.loadPolicyNames(policy.policyType, policy.policyName);
-      }
-    });
-
-    // Format dateOfBirth for the date input (YYYY-MM-DD)
-    let dateOfBirthValue = '';
-    if (policy?.dateOfBirth) {
-      const date = new Date(policy.dateOfBirth);
-      dateOfBirthValue = date.toISOString().split('T')[0];
-    }
-
+  private initFormSchema(): void {
     this.policyForm = this.fb.group({
-      firstName: [policy?.firstName || '', [Validators.required]],
-      lastName: [policy?.lastName || '', [Validators.required]],
-      policyNumber: [policy?.policyNumber || '', [Validators.required]],
-      email: [policy?.email || '', [Validators.required, Validators.email]],
-      policyType: [policy?.policyType || '', [Validators.required]],
-      policyName: [policy?.policyName || '', [Validators.required]],
-      phoneNumber: [policy?.phoneNumber || ''],
-      address: [policy?.address || ''],
-      city: [policy?.city || ''],
-      state: [policy?.state || ''],
-      postalCode: [policy?.postalCode || ''],
-      country: [policy?.country || ''],
-      dateOfBirth: [dateOfBirthValue, []]
+      firstName: ['', [Validators.required]],
+      lastName: ['', [Validators.required]],
+      policyNumber: ['', [Validators.required]],
+      email: ['', [Validators.required, Validators.email]],
+      policyType: ['', [Validators.required]],
+      policyName: ['', [Validators.required]],
+      phoneNumber: [''],
+      address: [''],
+      city: [''],
+      state: [''],
+      postalCode: [''],
+      country: [''],
+      dateOfBirth: ['', []]
     });
 
     // Handle policy type changes
-    this.typeChangeSub?.unsubscribe();
     this.typeChangeSub = this.policyForm.get('policyType')?.valueChanges.subscribe(typeId => {
       if (typeId) {
-        this.loadPolicyNames(typeId);
+        this.policyService.getPolicyNames(typeId).subscribe(names => {
+          this.policyNames.set(names);
+        });
       } else {
         this.policyNames.set([]);
         this.policyForm.get('policyName')?.setValue('');
       }
-    }) as Subscription;
-  }
-
-  private loadPolicyNames(typeId: string | number, initialName?: any) {
-    this.policyService.getPolicyNames(typeId).subscribe(names => {
-      this.policyNames.set(names);
-      if (initialName && names.some(n => n.value === initialName.toString())) {
-        this.policyForm.get('policyName')?.setValue(initialName.toString());
-      }
     });
   }
 
-  loadPolicy(policyId: string): void {
-    this.policyService.getPolicyById(policyId).subscribe({
-      next: (policy) => {
-        this.patchForm(policy);
+  private loadInitialData(): void {
+    // 1. Load Policy Types
+    this.policyService.getPolicyTypes().subscribe({
+      next: (types) => {
+        this.policyTypes.set(types);
+        
+        // 2. If editing, load the policy
+        if (this.isEditMode && this.policyId) {
+          this.loadPolicyData(this.policyId);
+        }
       },
-      error: (error) => {
-        console.error('Error loading policy:', error);
-        this.showToast('Failed to load policy details', 'error');
-        this.router.navigate(['/policies']);
+      error: (err) => {
+        console.error('Error loading policy types:', err);
+        this.toastService.show('Failed to initialize form data.', 'error');
       }
     });
   }
 
-  patchForm(policy: any): void {
-    this.initForm(policy);
+  private loadPolicyData(id: string): void {
+    this.policyService.getPolicyById(id).subscribe({
+      next: (policy) => {
+        // 3. Load names for the specific type - use ID if available
+        const typeSelector = policy.policyTypeId || policy.policyType;
+        this.policyService.getPolicyNames(typeSelector).subscribe({
+          next: (names) => {
+            this.policyNames.set(names);
+            
+            // 4. Finally, patch the entire form
+            this.patchFormValues(policy);
+          },
+          error: (err) => {
+            console.error('Error loading policy names:', err);
+            this.patchFormValues(policy); // Still patch what we have
+          }
+        });
+      },
+      error: (err) => {
+        console.error('Error loading policy:', err);
+        this.toastService.show('Policy not found.', 'error');
+        this.onCancel();
+      }
+    });
   }
 
-  formatDate(dateString: string): string {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toISOString().split('T')[0];
+  private patchFormValues(policy: any): void {
+    // Format date for the input
+    const patchedValues: any = {
+      firstName: policy.firstName,
+      lastName: policy.lastName,
+      policyNumber: policy.policyNumber,
+      email: policy.email,
+      phoneNumber: policy.phoneNumber || '',
+      address: policy.address || '',
+      city: policy.city || '',
+      state: policy.state || '',
+      postalCode: policy.postalCode || '',
+      country: policy.country || '',
+      policyType: (policy.policyTypeId ?? policy.policyType ?? '').toString(),
+      policyName: (policy.policyNameId ?? policy.policyName ?? '').toString(),
+    };
+
+    if (policy.dateOfBirth) {
+      patchedValues.dateOfBirth = new Date(policy.dateOfBirth).toISOString().split('T')[0];
+    }
+    
+    console.log('Patching form with values:', patchedValues);
+    console.log('Available Types:', this.policyTypes());
+    console.log('Available Names:', this.policyNames());
+
+    // Use a small timeout to ensure the DOM is ready to accept select values
+    setTimeout(() => {
+      this.policyForm.patchValue(patchedValues);
+      console.log('Form patch complete. Current form value:', this.policyForm.value);
+    }, 200);
   }
-  showToast(message: string, type: 'success' | 'error' = 'success'): void {
-    this.toastService.show(message, type);
+
+  onToggleSidebar() {
+    this.sidebarOpen.update(open => !open);
+  }
+
+  onSelectChat(chatId: string): void {
+    this.chatStore.selectChat(chatId);
+    this.router.navigate(['/chat']);
+  }
+
+  onNewChat(): void {
+    this.chatStore.onNewChat();
+    this.router.navigate(['/chat']);
+  }
+
+  onDeleteChat(chatId: string): void {
+    this.chatStore.deleteChat(chatId);
+  }
+
+  onDeleteAllChats(): void {
+    this.chatStore.deleteAllChats();
   }
 
   get firstName() { return this.policyForm?.get('firstName'); }
@@ -144,49 +196,26 @@ export class PolicyForm implements OnInit, OnDestroy {
     this.isSubmitting.set(true);
     const formValue = this.policyForm.value;
 
-    if (this.isEditMode && this.policyId) {
-      this.policyService.updatePolicy(this.policyId, formValue)
-        .pipe(
-          finalize(() => this.isSubmitting.set(false))
-        )
-        .subscribe({
-          next: () => {
-            this.onSuccess('Policy updated successfully!');
-          },
-          error: (error) => {
-            console.error('Error updating policy:', error);
-            const errorMessage = error instanceof Error ? error.message : 'Failed to update policy. Please try again.';
-            this.onError(errorMessage);
-          }
-        });
-    } else {
-      this.policyService.createPolicy(formValue)
-        .pipe(
-          finalize(() => this.isSubmitting.set(false))
-        )
-        .subscribe({
-          next: () => {
-            this.onSuccess('Policy created successfully!');
-          },
-          error: (error) => {
-            console.error('Error creating policy:', error);
-            const errorMessage = error instanceof Error ? error.message : 'Failed to create policy. Please try again.';
-            this.onError(errorMessage);
-          }
-        });
-    }
-  }
+    const request$ = this.isEditMode && this.policyId 
+      ? this.policyService.updatePolicy(this.policyId, formValue)
+      : this.policyService.createPolicy(formValue);
 
-  onSuccess(message: string): void {
-    this.showToast(message, 'success');
-    setTimeout(() => {
-      this.router.navigate(['/policies']);
-    }, 1000);
-  }
-
-  onError(message: string): void {
-    this.showToast(message, 'error');
-    this.isSubmitting.set(false);
+    request$.pipe(
+      finalize(() => this.isSubmitting.set(false))
+    ).subscribe({
+      next: () => {
+        this.toastService.show(
+          `Policy ${this.isEditMode ? 'updated' : 'created'} successfully!`, 
+          'success'
+        );
+        setTimeout(() => this.onCancel(), 1000);
+      },
+      error: (error) => {
+        console.error('Error saving policy:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Failed to save record.';
+        this.toastService.show(errorMessage, 'error');
+      }
+    });
   }
 
   onCancel(): void {
