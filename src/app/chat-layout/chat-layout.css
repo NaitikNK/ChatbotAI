@@ -3,6 +3,7 @@
   inset: 0;
   display: flex;
   overflow: hidden;
+  background-color: var(--bg-app);
 }
 
 .app-container.loading {
@@ -15,74 +16,59 @@
   pointer-events: auto;
 }
 
-.app-container.loading .sidebar-overlay {
-  pointer-events: none;
+/* Overlay when sidebar is open on mobile */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.4); /* Slate 900 with opacity */
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 1001;
+  opacity: 0;
+  visibility: hidden;
+  transition: all var(--transition-normal);
+}
+
+.sidebar-overlay.show {
+  opacity: 1;
+  visibility: visible;
 }
 
 app-sidebar {
   flex-shrink: 0;
-  width: 250px;
+  width: 280px;
   height: 100vh;
-  overflow-y: auto;
+  z-index: 1002;
 }
 
 app-chat {
   flex: 1;
   height: 100vh;
   overflow: hidden;
+  box-shadow: -4px 0 15px rgba(0, 0, 0, 0.02);
 }
 
 /* Tablet styles */
 @media (max-width: 1024px) {
   app-sidebar {
-    width: 200px;
+    width: 250px;
   }
 }
 
 /* Mobile styles */
 @media (max-width: 768px) {
-  .app-container {
-    position: relative;
-  }
-
   app-sidebar {
     position: fixed;
-    left: -250px;
-    top: 0;
-    height: 100vh;
-    width: 250px;
-    z-index: 1002;
-    transition: left 0.3s ease;
+    left: 0;
+    transform: translateX(-100%);
+    transition: transform var(--transition-normal);
   }
 
   app-sidebar.open {
-    left: 0;
+    transform: translateX(0);
   }
 
   app-chat {
     width: 100vw;
-    height: 100vh;
-  }
-
-  /* Overlay when sidebar is open on mobile */
-  .sidebar-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1001;
-    display: none;
-  }
-
-  .sidebar-overlay.show {
-    display: block;
-  }
-
-  /* Ensure menu button is clickable on mobile */
-  .chat-header .menu-btn {
-    position: relative;
-    z-index: 1003;
   }
 }
