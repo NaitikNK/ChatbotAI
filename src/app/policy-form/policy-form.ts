@@ -53,7 +53,7 @@ export class PolicyForm implements OnInit, OnDestroy {
       email: ['', [Validators.required, Validators.email]],
       policyType: ['', [Validators.required]],
       policyName: ['', [Validators.required]],
-      phoneNumber: [''],
+      phoneNumber: ['', [Validators.pattern(/^[0-9]{10}$/)]],
       address: [''],
       city: [''],
       state: [''],

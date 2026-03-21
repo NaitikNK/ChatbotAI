@@ -89,13 +89,20 @@
               </div>
 
               <div class="form-group">
-                <label for="phoneNumber">Contact Number</label>
+                <label for="phoneNumber">Contact Number (10-digit)</label>
                 <input
                   type="tel"
                   id="phoneNumber"
                   formControlName="phoneNumber"
-                  placeholder="+1 (555) 000-0000"
+                  placeholder="e.g. 9876543210"
+                  [class.error]="phoneNumber?.invalid && phoneNumber?.touched"
                 />
+                @if (phoneNumber?.invalid && phoneNumber?.touched) {
+                  <div class="error-message">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    <span>Please enter exactly 10 digits</span>
+                  </div>
+                }
               </div>
             </div>
 
