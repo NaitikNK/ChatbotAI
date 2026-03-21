@@ -13,6 +13,12 @@ interface ChatApiResponse {
   error: string | null;
 }
 
+interface GenericApiResponse<T> {
+  success: boolean;
+  data: T;
+  error: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AiService {
   private readonly apiUrl = environment.apiUrl;
@@ -35,6 +41,22 @@ export class AiService {
             return throwError(() => error);
           }
           // Otherwise it's an HTTP error, handle it
+          return throwError(() => error);
+        })
+      );
+  }
+
+  getGreeting(): Observable<string> {
+    return this.http
+      .get<GenericApiResponse<string>>(`${this.apiUrl}/ai/greeting`)
+      .pipe(
+        map((res) => {
+          if (!res.success) {
+            throw new Error(res.error || 'Failed to fetch greeting');
+          }
+          return res.data;
+        }),
+        catchError((error) => {
           return throwError(() => error);
         })
       );

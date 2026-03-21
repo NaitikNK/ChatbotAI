@@ -40,7 +40,6 @@ export class ChatLayout {
 
   async onDeleteChat(chatId: string) {
     const chats = this.chatStore.chats();
-    if (chats.length <= 1) return;
 
     const chatToDelete = chats.find(chat => chat.id === chatId);
     if (!chatToDelete) return;
@@ -56,7 +55,11 @@ export class ChatLayout {
     if (confirmed) {
       this.chatStore.isLoading.set(true);
       setTimeout(() => {
-        this.chatStore.deleteChat(chatId);
+        if (chats.length <= 1) {
+          this.chatStore.onClearChat();
+        } else {
+          this.chatStore.deleteChat(chatId);
+        }
         this.closeSidebarOnMobile();
         this.chatStore.isLoading.set(false);
       }, UI_TIMINGS.DELETE_DELAY);
