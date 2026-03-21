@@ -25,6 +25,16 @@ export class ChatStoreService {
 
   constructor(private readonly ai: AiService) {}
 
+  setDraft(chatId: string, draft: string) {
+    this.chats.update(chats =>
+      chats.map(chat =>
+        chat.id === chatId
+          ? { ...chat, draftMessage: draft }
+          : chat
+      )
+    );
+  }
+
   selectChat(chatId: string) {
     this.currentChatId.set(chatId);
   }
@@ -96,7 +106,9 @@ export class ChatStoreService {
     this.chats.update((chats) =>
       chats.map((chat) => {
         if (chat.id !== chatId) return chat;
-        if (!this.isDefaultChatTitle(chat.title)) return chat;
+        
+        const userMsgs = chat.messages.filter(m => m.role === 'user');
+        if (!this.isDefaultChatTitle(chat.title) && userMsgs.length > 2) return chat;
 
         const title = this.deriveChatTitle(chat.messages);
         return title ? { ...chat, title } : chat;
@@ -115,18 +127,15 @@ export class ChatStoreService {
       .map((m) => m.text.trim())
       .filter(Boolean);
 
-    if (userTexts.length < 2) return null;
+    if (userTexts.length === 0) return null;
 
-    const combined = userTexts.slice(0, 3).join(' ').trim();
+    const combined = userTexts.slice(0, 2).join(' ').trim();
     const cleaned = combined.replace(/\s+/g, ' ').replace(/["'`]/g, '').trim();
     if (!cleaned) return null;
 
-    const firstSentence = cleaned.split(/[.!?\n]/)[0].trim();
-    const base = firstSentence || cleaned;
-
-    const maxLen = 32;
-    if (base.length <= maxLen) return this.toTitleCase(base);
-    return this.toTitleCase(base.slice(0, maxLen - 1).trim()) + '…';
+    const maxLen = 40;
+    if (cleaned.length <= maxLen) return this.toTitleCase(cleaned);
+    return this.toTitleCase(cleaned.slice(0, maxLen - 1).trim()) + '…';
   }
 
   private toTitleCase(text: string): string {
@@ -159,7 +168,7 @@ export class ChatStoreService {
       this.chats.update(chats =>
         chats.map(chat =>
           chat.id === this.currentChatId()
-          ? { ...chat, title: '', messages: [] }
+          ? { ...chat, title: '', messages: [], draftMessage: undefined }
           : chat
         )
       );
@@ -181,7 +190,8 @@ export class ChatStoreService {
     const newChat: Chat = {
       id: Date.now().toString(),
       title: '',
-      messages: []
+      messages: [],
+      draftMessage: undefined
     };
     this.chats.set([newChat]);
     this.currentChatId.set(newChat.id);

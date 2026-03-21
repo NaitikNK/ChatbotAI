@@ -49,4 +49,8 @@ export class SidebarComponent {
   onDeleteAllChats() {
     this.deleteAllChats.emit();
   }
+
+  hasDraft(chat: Chat): boolean {
+    return !!chat.draftMessage;
+  }
 }

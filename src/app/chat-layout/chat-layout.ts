@@ -1,28 +1,24 @@
 import { Component, signal, inject } from '@angular/core';
 import { ChatComponent } from '../chat/chat.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
-import { PopupComponent } from '../popup/popup';
 import { LoaderComponent } from '../loader/loader';
 import { ChatStoreService } from '../services/chat.store.service';
+import { ConfirmService } from '../services/confirm.service';
 import { UI_TIMINGS } from '../constants/ui-timings.constant';
 
 @Component({
   selector: 'app-chat-layout',
   standalone: true,
-  imports: [ChatComponent, SidebarComponent, PopupComponent, LoaderComponent],
+  imports: [ChatComponent, SidebarComponent, LoaderComponent],
   templateUrl: './chat-layout.html',
   styleUrl: './chat-layout.css'
 })
 export class ChatLayout {
   public readonly chatStore = inject(ChatStoreService);
+  private readonly confirmService = inject(ConfirmService);
   
   protected readonly title = signal('ChatbotAI');
   sidebarOpen = signal(false);
-
-  // Popup state
-  showPopup = signal(false);
-  popupMessage = signal('');
-  private pendingDeleteAction: (() => void) | null = null;
 
   onSelectChat(chatId: string) {
     this.chatStore.selectChat(chatId);
@@ -42,7 +38,7 @@ export class ChatLayout {
     this.chatStore.onClearChat();
   }
 
-  onDeleteChat(chatId: string) {
+  async onDeleteChat(chatId: string) {
     const chats = this.chatStore.chats();
     if (chats.length <= 1) return;
 
@@ -50,45 +46,46 @@ export class ChatLayout {
     if (!chatToDelete) return;
     const chatName = chatToDelete.title.trim() ? `"${chatToDelete.title}"` : 'this chat';
 
-    this.popupMessage.set(`Are you sure you want to delete ${chatName}?`);
-    this.pendingDeleteAction = () => {
-      this.chatStore.deleteChat(chatId);
-      this.closeSidebarOnMobile();
-    };
-    this.showPopup.set(true);
-  }
+    const confirmed = await this.confirmService.confirm({
+      title: 'Clear Conversation',
+      message: `Are you sure you want to clear ${chatName}? This action cannot be undone.`,
+      confirmText: 'Clear',
+      type: 'danger'
+    });
 
-  onDeleteAllChats() {
-    const chats = this.chatStore.chats();
-    if (chats.length <= 1) return;
-
-    this.popupMessage.set(`Are you sure you want to delete all ${chats.length} chats? This action cannot be undone.`);
-    this.pendingDeleteAction = () => {
-      this.chatStore.deleteAllChats();
-      this.closeSidebarOnMobile();
-    };
-    this.showPopup.set(true);
-  }
-
-  onToggleSidebar() {
-    this.sidebarOpen.update(open => !open);
-  }
-
-  onPopupConfirm() {
-    this.showPopup.set(false);
-    if (this.pendingDeleteAction) {
+    if (confirmed) {
       this.chatStore.isLoading.set(true);
       setTimeout(() => {
-        this.pendingDeleteAction!();
-        this.pendingDeleteAction = null;
+        this.chatStore.deleteChat(chatId);
+        this.closeSidebarOnMobile();
         this.chatStore.isLoading.set(false);
       }, UI_TIMINGS.DELETE_DELAY);
     }
   }
 
-  onPopupCancel() {
-    this.pendingDeleteAction = null;
-    this.showPopup.set(false);
+  async onDeleteAllChats() {
+    const chats = this.chatStore.chats();
+    if (chats.length <= 1) return;
+
+    const confirmed = await this.confirmService.confirm({
+      title: 'Clear All Conversations',
+      message: `Are you sure you want to clear all ${chats.length} chats? This action cannot be undone.`,
+      confirmText: 'Clear All',
+      type: 'danger'
+    });
+
+    if (confirmed) {
+      this.chatStore.isLoading.set(true);
+      setTimeout(() => {
+        this.chatStore.deleteAllChats();
+        this.closeSidebarOnMobile();
+        this.chatStore.isLoading.set(false);
+      }, UI_TIMINGS.DELETE_DELAY);
+    }
+  }
+
+  onToggleSidebar() {
+    this.sidebarOpen.update(open => !open);
   }
 
   private closeSidebarOnMobile() {

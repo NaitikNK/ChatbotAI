@@ -84,6 +84,17 @@ export class PolicyForm implements OnInit, OnDestroy {
         // 2. If editing, load the policy
         if (this.isEditMode && this.policyId) {
           this.loadPolicyData(this.policyId);
+        } else {
+          // fetch generated policy number
+          this.policyService.generatePolicyNumber().subscribe({
+            next: (num) => {
+              this.policyForm.patchValue({ policyNumber: num });
+            },
+            error: (err) => {
+              console.error("Error generating policy number", err);
+              this.toastService.show("Failed to generate policy number", "error");
+            }
+          });
         }
       },
       error: (err) => {
@@ -194,7 +205,11 @@ export class PolicyForm implements OnInit, OnDestroy {
     }
 
     this.isSubmitting.set(true);
-    const formValue = this.policyForm.value;
+    const formValue = { ...this.policyForm.value };
+
+    if (!formValue.dateOfBirth) {
+        formValue.dateOfBirth = null;
+    }
 
     const request$ = this.isEditMode && this.policyId 
       ? this.policyService.updatePolicy(this.policyId, formValue)

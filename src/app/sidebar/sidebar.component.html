@@ -42,7 +42,12 @@
         [class.untitled]="!chat.title.trim()"
         (click)="onSelectChat(chat.id)"
       >
-        <span class="chat-title">{{ chat.title || 'New Chat' }}</span>
+        <span class="chat-title" [style.font-style]="hasDraft(chat) ? 'italic' : 'normal'" [style.color]="hasDraft(chat) ? 'var(--primary-color)' : ''">
+          {{ chat.title || 'New Chat' }}
+          @if (hasDraft(chat)) {
+            <span style="font-size: 0.85em; opacity: 0.8; margin-left: 4px;">[Draft]</span>
+          }
+        </span>
         <button
           class="delete-btn"
           (click)="onDeleteChat(chat.id, $event)"
