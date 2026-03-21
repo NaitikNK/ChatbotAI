@@ -1,11 +1,15 @@
 <div class="chat-container">
   <div class="chat-header">
-    <button class="menu-btn" (click)="onToggleSidebar()" aria-label="Toggle sidebar">
-      <span></span>
-      <span></span>
-      <span></span>
-    </button>
-    <h2>Chat</h2>
+    <div class="header-left">
+      <button class="menu-btn" (click)="onToggleSidebar()" aria-label="Toggle sidebar">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <h2>Chat</h2>
+    </div>
+    <div class="header-actions">
+    </div>
   </div>
   <div class="messages" #messagesContainer>
     @for (message of messages(); track $index) {
@@ -30,21 +34,6 @@
           }
         </div>
 
-        @if (message.role === 'assistant' && $index === pendingYesNoPromptIndex) {
-          <div class="yesno-inline" role="group" aria-label="Choose an option">
-            <div class="yesno-options">
-              <label class="yesno-option" for="yes-option-{{ $index }}">
-                <input type="radio" id="yes-option-{{ $index }}" name="yesno-{{ $index }}" value="Yes" [(ngModel)]="yesNoSelection" [disabled]="busy()" />
-                Yes
-              </label>
-              <label class="yesno-option" for="no-option-{{ $index }}">
-                <input type="radio" id="no-option-{{ $index }}" name="yesno-{{ $index }}" value="No" [(ngModel)]="yesNoSelection" [disabled]="busy()" />
-                No
-              </label>
-            </div>
-            <button (click)="onSendYesNo()" [disabled]="busy() || !yesNoSelection" aria-label="Send selection">Send</button>
-          </div>
-        }
       </div>
     }
 
@@ -56,153 +45,39 @@
       </div>
     }
 
-    @if (showCreatePolicyForm()) {
-      <div class="message assistant policy-form-message">
-        <div class="inline-policy-form">
-          <div class="form-header">
-            <h3>{{ editingPolicyId() ? 'Edit Policy' : 'Create Policy' }}</h3>
-            <button class="close-form-btn" (click)="onCloseForm()" aria-label="Close form">
-              <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-              </svg>
-            </button>
-          </div>
-          <div class="form-body">
-            <form [formGroup]="policyForm" (ngSubmit)="onSubmitPolicy()">
-              <div class="form-section">
-                <h4>Personal Information</h4>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label for="firstName">First Name <span class="required">*</span></label>
-                    <input type="text" id="firstName" formControlName="firstName" placeholder="Enter first name" />
-                  </div>
-                  <div class="form-group">
-                    <label for="lastName">Last Name <span class="required">*</span></label>
-                    <input type="text" id="lastName" formControlName="lastName" placeholder="Enter last name" />
-                  </div>
-                </div>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label for="email">Email <span class="required">*</span></label>
-                    <input type="email" id="email" formControlName="email" placeholder="Enter email" />
-                    @if (policyForm.get('email')?.invalid && (policyForm.get('email')?.dirty || policyForm.get('email')?.touched)) {
-                      <div class="error-msg">
-                        @if (policyForm.get('email')?.errors?.['required']) { <span>Email is required</span> }
-                        @if (policyForm.get('email')?.errors?.['pattern']) { <span>Invalid email format</span> }
-                      </div>
-                    }
-                  </div>
-                  <div class="form-group">
-                    <label for="phoneNumber">Phone Number <span class="required">*</span></label>
-                    <input type="tel" id="phoneNumber" formControlName="phoneNumber" placeholder="Enter phone number" />
-                    @if (policyForm.get('phoneNumber')?.invalid && (policyForm.get('phoneNumber')?.dirty || policyForm.get('phoneNumber')?.touched)) {
-                      <div class="error-msg">
-                        @if (policyForm.get('phoneNumber')?.errors?.['required']) { <span>Phone is required</span> }
-                        @if (policyForm.get('phoneNumber')?.errors?.['pattern']) { <span>Must be 10 digits</span> }
-                      </div>
-                    }
-                  </div>
-                </div>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label for="dateOfBirth">Date of Birth</label>
-                    <input type="date" id="dateOfBirth" formControlName="dateOfBirth" />
-                  </div>
-                </div>
-              </div>
-
-              <div class="form-section">
-                <h4>Policy Information</h4>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label for="policyNumber">Policy Number <span class="required">*</span></label>
-                    <input type="text" id="policyNumber" formControlName="policyNumber" placeholder="Enter policy number" readonly />
-                  </div>
-                  <div class="form-group">
-                    <label for="policyType">Policy Type <span class="required">*</span></label>
-                    <select id="policyType" formControlName="policyType">
-                      <option value="">Select Policy Type</option>
-                      @for (type of policyTypes(); track type.value) {
-                        <option [value]="type.value">{{ type.label }}</option>
-                      }
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label for="policyName">Policy Name <span class="required">*</span></label>
-                    <select id="policyName" formControlName="policyName">
-                      <option value="">Select Policy Name</option>
-                      @for (name of policyNames(); track name.value) {
-                        <option [value]="name.value">{{ name.label }}</option>
-                      }
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <div class="form-section">
-                <h4>Address Information</h4>
-                <div class="form-row">
-                  <div class="form-group full-width">
-                    <label for="address">Address</label>
-                    <input type="text" id="address" formControlName="address" placeholder="Enter address" />
-                  </div>
-                </div>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label for="city">City</label>
-                    <input type="text" id="city" formControlName="city" placeholder="Enter city" />
-                  </div>
-                  <div class="form-group">
-                    <label for="state">State</label>
-                    <input type="text" id="state" formControlName="state" placeholder="Enter state" />
-                  </div>
-                </div>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label for="postalCode">Postal Code</label>
-                    <input type="text" id="postalCode" formControlName="postalCode" placeholder="Enter postal code" />
-                  </div>
-                  <div class="form-group">
-                    <label for="country">Country</label>
-                    <input type="text" id="country" formControlName="country" placeholder="Enter country" />
-                  </div>
-                </div>
-              </div>
-
-              <div class="form-actions">
-                <button type="button" class="btn btn-secondary" (click)="onCloseForm()">Cancel</button>
-                <button type="submit" class="btn btn-primary" [disabled]="policyForm.invalid || isSubmitting()">
-                  {{ isSubmitting() ? 'Saving...' : 'Save' }}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    }
   </div>
-  <div class="input-area">
-    <textarea
-      [ngModel]="newMessage"
-      (ngModelChange)="onInputChange($event)"
-      (keydown.enter)="onEnterDown($event)"
-      placeholder="Type a message..."
-      [disabled]="busy() || showYesNoPrompt"
-      rows="1"
-      class="auto-expand"
-    ></textarea>
-    <button (click)="onSendMessage()" [disabled]="busy() || showYesNoPrompt" aria-label="Send message">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
-        <line x1="22" y1="2" x2="11" y2="13"></line>
-        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-      </svg>
-      <span>Send</span>
-    </button>
-    <button (click)="onClearChat()" class="clear-btn" [disabled]="busy()" aria-label="Clear chat">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
-        <polyline points="3 6 5 6 21 6"></polyline>
-        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-      </svg>
-    </button>
+  <div class="input-area-wrapper">
+    <div class="input-container">
+      <div class="add-btn-container">
+        <button class="add-btn" (click)="onPlusClick()" aria-label="Add attachment" [disabled]="busy()" title="Coming soon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
+        @if (showPlusTooltip()) {
+          <div class="plus-tooltip">Coming soon</div>
+        }
+      </div>
+      <textarea
+        [ngModel]="newMessage"
+        (ngModelChange)="onInputChange($event)"
+        (input)="autoGrow($event)"
+        (keydown.enter)="onEnterDown($event)"
+        placeholder="How can I help you today?"
+        [disabled]="busy()"
+        rows="1"
+        class="auto-expand"
+      ></textarea>
+      
+      <div class="input-actions">
+        <button (click)="onSendMessage()" class="send-btn" [disabled]="busy() || !newMessage.trim()" aria-label="Send message" title="Send message">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+            <line x1="12" y1="19" x2="12" y2="5"></line>
+            <polyline points="5 12 12 5 19 12"></polyline>
+          </svg>
+        </button>
+      </div>
+    </div>
   </div>
 </div>

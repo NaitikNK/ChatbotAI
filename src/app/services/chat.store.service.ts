@@ -8,6 +8,8 @@ import { HttpErrorResponse } from '@angular/common/http';
   providedIn: 'root'
 })
 export class ChatStoreService {
+  private greetingMessageText = "Loading greeting...";
+
   chats = signal<Chat[]>([
     { id: 'initial', title: '', messages: [] }
   ]);
@@ -20,10 +22,40 @@ export class ChatStoreService {
 
   canCreateNewChat = computed(() => {
     const current = this.currentChat();
-    return current && current.messages.length > 0;
+    return current && current.messages.length > 1; // 1 is just the greeting
   });
 
-  constructor(private readonly ai: AiService) {}
+  private createGreetingMessage(text: string): ChatMessage {
+    return {
+      role: 'assistant',
+      text: text,
+      createdAt: Date.now()
+    };
+  }
+
+  constructor(private readonly ai: AiService) {
+    this.refreshInitialGreeting();
+  }
+
+  private refreshInitialGreeting() {
+    this.isLoading.set(true);
+    this.ai.getGreeting().subscribe({
+      next: (greeting) => {
+        this.greetingMessageText = greeting;
+        this.chats.update(chats => chats.map(c => {
+          if (c.id === 'initial' && c.messages.length === 0) {
+            return { ...c, messages: [this.createGreetingMessage(greeting)] };
+          }
+          return c;
+        }));
+        this.isLoading.set(false);
+      },
+      error: () => {
+        this.greetingMessageText = "Hello! How can I help you today?";
+        this.isLoading.set(false);
+      }
+    });
+  }
 
   setDraft(chatId: string, draft: string) {
     this.chats.update(chats =>
@@ -41,17 +73,30 @@ export class ChatStoreService {
 
   onNewChat() {
     this.isLoading.set(true);
-    setTimeout(() => {
-      const newId = Date.now().toString();
-      const newChat: Chat = {
-        id: newId,
-        title: '',
-        messages: []
-      };
-      this.chats.update(chats => [...chats, newChat]);
-      this.currentChatId.set(newId);
-      this.isLoading.set(false);
-    }, UI_TIMINGS.LOADING_DELAY);
+    const newId = Date.now().toString();
+    const newChat: Chat = {
+      id: newId,
+      title: '',
+      messages: []
+    };
+    
+    // Optimistic insert
+    this.chats.update(chats => [...chats, newChat]);
+    this.currentChatId.set(newId);
+
+    this.ai.getGreeting().subscribe({
+      next: (greeting) => {
+        this.greetingMessageText = greeting;
+        this.chats.update(chats => chats.map(c => c.id === newId ? { ...c, messages: [this.createGreetingMessage(greeting)] } : c));
+        this.isLoading.set(false);
+      },
+      error: () => {
+        const defaultText = "Hello! How can I help you today?";
+        this.greetingMessageText = defaultText;
+        this.chats.update(chats => chats.map(c => c.id === newId ? { ...c, messages: [this.createGreetingMessage(defaultText)] } : c));
+        this.isLoading.set(false);
+      }
+    });
   }
 
   onSendMessage(message: string) {
@@ -164,16 +209,41 @@ export class ChatStoreService {
 
   onClearChat() {
     this.isLoading.set(true);
-    setTimeout(() => {
-      this.chats.update(chats =>
-        chats.map(chat =>
-          chat.id === this.currentChatId()
-          ? { ...chat, title: '', messages: [], draftMessage: undefined }
-          : chat
-        )
-      );
-      this.isLoading.set(false);
-    }, UI_TIMINGS.LOADING_DELAY);
+    const chatId = this.currentChatId();
+
+    // Clear messages immediately while loading greeting
+    this.chats.update(chats =>
+      chats.map(chat =>
+        chat.id === chatId
+        ? { ...chat, title: '', messages: [], draftMessage: undefined }
+        : chat
+      )
+    );
+    
+    this.ai.getGreeting().subscribe({
+      next: (greeting) => {
+        this.greetingMessageText = greeting;
+        this.chats.update(chats =>
+          chats.map(chat =>
+            chat.id === chatId
+            ? { ...chat, title: '', messages: [this.createGreetingMessage(greeting)], draftMessage: undefined }
+            : chat
+          )
+        );
+        this.isLoading.set(false);
+      },
+      error: () => {
+        const defaultText = "Hello! How can I help you today?";
+        this.chats.update(chats =>
+          chats.map(chat =>
+            chat.id === chatId
+            ? { ...chat, title: '', messages: [this.createGreetingMessage(defaultText)], draftMessage: undefined }
+            : chat
+          )
+        );
+        this.isLoading.set(false);
+      }
+    });
   }
 
   deleteChat(chatId: string) {
@@ -195,5 +265,19 @@ export class ChatStoreService {
     };
     this.chats.set([newChat]);
     this.currentChatId.set(newChat.id);
+    
+    this.isLoading.set(true);
+    this.ai.getGreeting().subscribe({
+      next: (greeting) => {
+        this.greetingMessageText = greeting;
+        this.chats.update(chats => chats.map(c => c.id === newChat.id ? { ...c, messages: [this.createGreetingMessage(greeting)] } : c));
+        this.isLoading.set(false);
+      },
+      error: () => {
+        const defaultText = "Hello! How can I help you today?";
+        this.chats.update(chats => chats.map(c => c.id === newChat.id ? { ...c, messages: [this.createGreetingMessage(defaultText)] } : c));
+        this.isLoading.set(false);
+      }
+    });
   }
 }
