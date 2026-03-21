@@ -125,6 +125,7 @@
                   id="policyNumber"
                   formControlName="policyNumber"
                   placeholder="POL-12345"
+                  readonly
                   [class.error]="policyNumber?.invalid && policyNumber?.touched"
                 />
                 @if (policyNumber?.invalid && policyNumber?.touched) {

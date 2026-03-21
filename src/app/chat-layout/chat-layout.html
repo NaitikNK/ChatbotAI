@@ -21,12 +21,6 @@
     (clearChat)="onClearChat()"
     (toggleSidebar)="onToggleSidebar()"
   ></app-chat>
-  <app-popup
-    [message]="popupMessage()"
-    [show]="showPopup()"
-    (confirm)="onPopupConfirm()"
-    (cancel)="onPopupCancel()"
-  ></app-popup>
   <app-loader
     [show]="chatStore.isLoading()"
   ></app-loader>

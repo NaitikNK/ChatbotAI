@@ -1,4 +1,4 @@
-import { Component, input, output, ChangeDetectionStrategy, ViewChild, ElementRef, AfterViewChecked, signal, OnDestroy, effect } from '@angular/core';
+import { Component, input, output, ChangeDetectionStrategy, ViewChild, ElementRef, AfterViewChecked, signal, OnDestroy, effect, OnInit, untracked } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 // ... rest of imports
 import { DatePipe } from '@angular/common';
@@ -9,6 +9,7 @@ import { Subscription } from 'rxjs';
 import { MarkdownComponent } from 'ngx-markdown';
 import { ToastService } from '../services/toast.service';
 import { ConfirmService } from '../services/confirm.service';
+import { ChatStoreService } from '../services/chat.store.service';
 
 // Keyword detection for showing create policy form
 const CREATE_POLICY_KEYWORDS = [
@@ -32,7 +33,7 @@ const CREATE_POLICY_KEYWORDS = [
   styleUrl: './chat.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ChatComponent implements AfterViewChecked, OnDestroy {
+export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
 
   messages = input<ChatMessage[]>([]);
@@ -53,12 +54,25 @@ export class ChatComponent implements AfterViewChecked, OnDestroy {
 
   sendMessage = output<string>();
 
+  ngOnInit() {
+  }
+
   constructor(
     private readonly fb: FormBuilder,
     private readonly policyService: PolicyService,
     private readonly toastService: ToastService,
-    private readonly confirmService: ConfirmService
+    private readonly confirmService: ConfirmService,
+    private readonly chatStore: ChatStoreService
   ) {
+    // Draft loading effect
+    effect(() => {
+      const id = this.chatStore.currentChatId();
+      if (id) {
+        const draft = untracked(() => this.chatStore.currentChat().draftMessage) || '';
+        this.newMessage = draft;
+      }
+    }, { allowSignalWrites: true });
+
     // Timing fix: Show form after AI stops being busy (with a small delay for readability)
     effect(() => {
       const isBusy = this.busy();
@@ -93,10 +107,10 @@ export class ChatComponent implements AfterViewChecked, OnDestroy {
       firstName: [policy?.firstName || '', [Validators.required]],
       lastName: [policy?.lastName || '', [Validators.required]],
       policyNumber: [policy?.policyNumber || '', [Validators.required]],
-      email: [policy?.email || '', [Validators.required, Validators.email]],
+      email: [policy?.email || '', [Validators.required, Validators.pattern('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$')]],
       policyType: [policy?.policyTypeId?.toString() || policy?.policyType || '', [Validators.required]],
       policyName: [policy?.policyNameId?.toString() || policy?.policyName || '', [Validators.required]],
-      phoneNumber: [policy?.phoneNumber || ''],
+      phoneNumber: [policy?.phoneNumber || '', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
       address: [policy?.address || ''],
       city: [policy?.city || ''],
       state: [policy?.state || ''],
@@ -115,6 +129,15 @@ export class ChatComponent implements AfterViewChecked, OnDestroy {
         this.policyForm.get('policyName')?.setValue('');
       }
     }) as Subscription;
+
+    if (!policy) {
+      this.policyService.generatePolicyNumber().subscribe({
+        next: (num) => {
+          this.policyForm.patchValue({ policyNumber: num });
+        },
+        error: (err) => console.error("Error generating policy number", err)
+      });
+    }
   }
 
   private loadPolicyNames(typeId: string | number, initialName?: any) {
@@ -148,6 +171,7 @@ export class ChatComponent implements AfterViewChecked, OnDestroy {
       }
     }
     this.newMessage = value;
+    this.chatStore.setDraft(this.chatStore.currentChatId(), this.newMessage);
   }
 
   ngAfterViewChecked() {
@@ -188,6 +212,7 @@ export class ChatComponent implements AfterViewChecked, OnDestroy {
       
       this.sendMessage.emit(message);
       this.newMessage = '';
+      this.chatStore.setDraft(this.chatStore.currentChatId(), '');
     }
   }
 
@@ -204,8 +229,17 @@ export class ChatComponent implements AfterViewChecked, OnDestroy {
 
   clearChat = output<void>();
 
-  onClearChat() {
-    this.clearChat.emit();
+  async onClearChat() {
+    const confirmed = await this.confirmService.confirm({
+      title: 'Clear Conversation',
+      message: 'Are you sure you want to clear this conversation? This action cannot be undone.',
+      confirmText: 'Clear',
+      type: 'danger'
+    });
+
+    if (confirmed) {
+      this.clearChat.emit();
+    }
   }
 
   toggleSidebar = output<void>();
@@ -261,11 +295,13 @@ export class ChatComponent implements AfterViewChecked, OnDestroy {
     }
 
     this.isSubmitting.set(true);
-    const formValue = this.policyForm.value;
+    const formValue = { ...this.policyForm.value };
 
     // Convert dateOfBirth to Date object if provided
     if (formValue.dateOfBirth) {
       formValue.dateOfBirth = new Date(formValue.dateOfBirth);
+    } else {
+      formValue.dateOfBirth = null;
     }
 
     // No need to convert policyType or policyName anymore, they should match API values

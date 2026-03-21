@@ -50,6 +50,27 @@
   font-size: 18px;
   font-weight: 600;
   color: #1a1a2e;
+  flex-grow: 1;
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  color: #495057;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  margin-right: -4px;
+  margin-top: -8px;
+}
+
+.close-btn:hover {
+  background-color: #f1f3f5;
+  color: #212529;
 }
 
 .modal-icon {

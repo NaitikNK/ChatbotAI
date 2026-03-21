@@ -56,6 +56,7 @@ export interface Policy {
   postalCode?: string;
   country?: string;
   dateOfBirth?: Date;
+  isDefault?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
   [key: string]: any;
@@ -109,6 +110,21 @@ export class PolicyService {
           return throwError(() => error);
         })
       );
+  }
+
+  /**
+   * Generate a new policy number
+   */
+  generatePolicyNumber(): Observable<string> {
+    return this.http.get<any>(`${this.apiUrl}/users/generate-policy-number`).pipe(
+      map((res) => {
+        if (res.success) return res.data as string;
+        throw new Error('Failed to generate policy number');
+      }),
+      catchError(() => {
+        return throwError(() => new Error('Failed to generate policy number'));
+      })
+    );
   }
 
   /**
