@@ -166,6 +166,10 @@ export class PolicyForm implements OnInit, OnDestroy {
     this.sidebarOpen.update(open => !open);
   }
 
+  onCloseSidebar() {
+    this.sidebarOpen.set(false);
+  }
+
   onSelectChat(chatId: string): void {
     this.chatStore.selectChat(chatId);
     this.router.navigate(['/chat']);
@@ -241,3 +245,4 @@ export class PolicyForm implements OnInit, OnDestroy {
     this.typeChangeSub?.unsubscribe();
   }
 }
+

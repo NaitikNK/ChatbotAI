@@ -1,6 +1,7 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { Chat, ChatMessage } from '../models/chat';
 import { AiService } from './ai.service';
+import { AuthService } from './auth.service';
 import { UI_TIMINGS } from '../constants/ui-timings.constant';
 import { HttpErrorResponse } from '@angular/common/http';
 
@@ -9,6 +10,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 })
 export class ChatStoreService {
   private greetingMessageText = "Loading greeting...";
+  private readonly auth = inject(AuthService);
 
   chats = signal<Chat[]>([
     { id: 'initial', title: '', messages: [] }
@@ -34,6 +36,30 @@ export class ChatStoreService {
   }
 
   constructor(private readonly ai: AiService) {
+    this.refreshInitialGreeting();
+    this.initAuthListener();
+  }
+
+  private initAuthListener() {
+    this.auth.currentUser$.subscribe(user => {
+      if (user) {
+        // User logged in: load their sessions
+        this.loadPreviousSessions();
+      } else {
+        // User logged out (null), and we have active sessions, reset state
+        // This ensures guest data is cleared on logout
+        if (this.chats().length > 1 || this.currentChat().messages.length > 1) {
+          this.resetToInitialState();
+        }
+      }
+    });
+  }
+
+  private resetToInitialState() {
+    const initialId = 'initial-' + Date.now();
+    const initialChat: Chat = { id: initialId, title: '', messages: [] };
+    this.chats.set([initialChat]);
+    this.currentChatId.set(initialId);
     this.refreshInitialGreeting();
   }
 
@@ -69,6 +95,53 @@ export class ChatStoreService {
 
   selectChat(chatId: string) {
     this.currentChatId.set(chatId);
+    const chat = this.chats().find(c => c.id === chatId);
+    if (chat && chat.messages.length === 0) {
+      this.loadHistory(chatId);
+    }
+  }
+
+  private loadPreviousSessions() {
+    this.ai.getSessions().subscribe({
+      next: (sessionIds) => {
+        this.chats.update(currentChats => {
+          const newChats = [...currentChats];
+          sessionIds.forEach(id => {
+            if (!newChats.find(c => c.id === id)) {
+              newChats.push({
+                id,
+                title: 'Past Session',
+                messages: []
+              });
+            }
+          });
+          return newChats;
+        });
+      }
+    });
+  }
+
+  private loadHistory(chatId: string) {
+    this.isLoading.set(true);
+    this.ai.getHistory(chatId).subscribe({
+      next: (history) => {
+        const messages: ChatMessage[] = history
+          .filter(m => m.role === 'user' || m.role === 'assistant')
+          .map(m => ({
+            role: m.role as any,
+            text: m.content,
+            createdAt: new Date(m.createdAt).getTime()
+          }));
+
+        this.chats.update(chats => chats.map(c => 
+          c.id === chatId 
+            ? { ...c, messages, title: this.deriveChatTitle(messages) || 'Chat History' } 
+            : c
+        ));
+        this.isLoading.set(false);
+      },
+      error: () => this.isLoading.set(false)
+    });
   }
 
   onNewChat() {
@@ -220,6 +293,11 @@ export class ChatStoreService {
       )
     );
     
+    // Persistent clear
+    this.ai.deleteHistory(chatId).subscribe({
+      error: (err) => console.error('Failed to clear chat in DB', err)
+    });
+
     this.ai.getGreeting().subscribe({
       next: (greeting) => {
         this.greetingMessageText = greeting;
@@ -249,6 +327,12 @@ export class ChatStoreService {
   deleteChat(chatId: string) {
     const chats = this.chats();
     if (chats.length <= 1) return;
+    
+    // Persistent delete from DB
+    this.ai.deleteHistory(chatId).subscribe({
+      error: (err) => console.error('Failed to delete chat in DB', err)
+    });
+
     if (chatId === this.currentChatId()) {
       const remainingChats = chats.filter(chat => chat.id !== chatId);
       this.currentChatId.set(remainingChats[0].id);
@@ -265,6 +349,11 @@ export class ChatStoreService {
     };
     this.chats.set([newChat]);
     this.currentChatId.set(newChat.id);
+
+    // Persistent bulk delete
+    this.ai.deleteAllHistory().subscribe({
+      error: (err) => console.error('Failed to bulk delete chats in DB', err)
+    });
     
     this.isLoading.set(true);
     this.ai.getGreeting().subscribe({

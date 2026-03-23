@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { map, Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+import { AuthService } from './auth.service';
 
 interface ChatApiResponse {
   success: boolean;
@@ -19,15 +20,31 @@ interface GenericApiResponse<T> {
   error: string | null;
 }
 
+export interface ChatMessageResponse {
+  role: string;
+  content: string;
+  createdAt: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AiService {
   private readonly apiUrl = environment.apiUrl;
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(private readonly http: HttpClient, private readonly authService: AuthService) {}
+
+  private getHeaders(): HttpHeaders {
+    let headers = new HttpHeaders();
+    const user = this.authService.currentUserValue;
+    if (user && user.id) {
+      headers = headers.set('X-User-Id', user.id.toString());
+      headers = headers.set('X-User-Role', user.role || 'User');
+    }
+    return headers;
+  }
 
   chat(message: string): Observable<string> {
     return this.http
-      .post<ChatApiResponse>(`${this.apiUrl}/ai/chat`, { message })
+      .post<ChatApiResponse>(`${this.apiUrl}/ai/chat`, { message }, { headers: this.getHeaders() })
       .pipe(
         map((res) => {
           if (!res.success) {
@@ -48,7 +65,7 @@ export class AiService {
 
   getGreeting(): Observable<string> {
     return this.http
-      .get<GenericApiResponse<string>>(`${this.apiUrl}/ai/greeting`)
+      .get<GenericApiResponse<string>>(`${this.apiUrl}/ai/greeting`, { headers: this.getHeaders() })
       .pipe(
         map((res) => {
           if (!res.success) {
@@ -59,6 +76,64 @@ export class AiService {
         catchError((error) => {
           return throwError(() => error);
         })
+      );
+  }
+
+  getSessions(): Observable<string[]> {
+    return this.http
+      .get<GenericApiResponse<string[]>>(`${this.apiUrl}/chat/sessions`, { headers: this.getHeaders() })
+      .pipe(
+        map((res) => {
+          if (!res.success) {
+            throw new Error(res.error || 'Failed to fetch sessions');
+          }
+          return res.data;
+        }),
+        catchError((error) => {
+          return throwError(() => error);
+        })
+      );
+  }
+
+  getHistory(conversationId: string): Observable<ChatMessageResponse[]> {
+    return this.http
+      .get<GenericApiResponse<ChatMessageResponse[]>>(`${this.apiUrl}/chat/history/${conversationId}`, { headers: this.getHeaders() })
+      .pipe(
+        map((res) => {
+          if (!res.success) {
+            throw new Error(res.error || 'Failed to fetch history');
+          }
+          return res.data;
+        }),
+        catchError((error) => {
+          return throwError(() => error);
+        })
+      );
+  }
+
+  deleteHistory(conversationId: string): Observable<void> {
+    return this.http
+      .delete<GenericApiResponse<any>>(`${this.apiUrl}/chat/history/${conversationId}`, { headers: this.getHeaders() })
+      .pipe(
+        map((res) => {
+          if (!res.success) {
+            throw new Error(res.error || 'Failed to delete history');
+          }
+        }),
+        catchError((error) => throwError(() => error))
+      );
+  }
+
+  deleteAllHistory(): Observable<void> {
+    return this.http
+      .delete<GenericApiResponse<any>>(`${this.apiUrl}/chat/history/all`, { headers: this.getHeaders() })
+      .pipe(
+        map((res) => {
+          if (!res.success) {
+            throw new Error(res.error || 'Failed to delete all history');
+          }
+        }),
+        catchError((error) => throwError(() => error))
       );
   }
 }

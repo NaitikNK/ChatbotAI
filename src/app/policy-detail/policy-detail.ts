@@ -76,6 +76,10 @@ export class PolicyDetail implements OnInit {
     this.sidebarOpen.update(open => !open);
   }
 
+  onCloseSidebar() {
+    this.sidebarOpen.set(false);
+  }
+
   onSelectChat(chatId: string) {
     this.chatStore.selectChat(chatId);
   }
@@ -106,3 +110,4 @@ export class PolicyDetail implements OnInit {
     this.router.navigate(['/policies']);
   }
 }
+

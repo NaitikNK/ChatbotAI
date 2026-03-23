@@ -22,12 +22,10 @@ export class ChatLayout {
 
   onSelectChat(chatId: string) {
     this.chatStore.selectChat(chatId);
-    this.closeSidebarOnMobile();
   }
 
   onNewChat() {
     this.chatStore.onNewChat();
-    this.closeSidebarOnMobile();
   }
 
   onSendMessage(message: string) {
@@ -60,7 +58,6 @@ export class ChatLayout {
         } else {
           this.chatStore.deleteChat(chatId);
         }
-        this.closeSidebarOnMobile();
         this.chatStore.isLoading.set(false);
       }, UI_TIMINGS.DELETE_DELAY);
     }
@@ -81,7 +78,6 @@ export class ChatLayout {
       this.chatStore.isLoading.set(true);
       setTimeout(() => {
         this.chatStore.deleteAllChats();
-        this.closeSidebarOnMobile();
         this.chatStore.isLoading.set(false);
       }, UI_TIMINGS.DELETE_DELAY);
     }
@@ -91,9 +87,8 @@ export class ChatLayout {
     this.sidebarOpen.update(open => !open);
   }
 
-  private closeSidebarOnMobile() {
-    if (window.innerWidth <= 768) {
-      this.sidebarOpen.set(false);
-    }
+  onCloseSidebar() {
+    this.sidebarOpen.set(false);
   }
 }
+

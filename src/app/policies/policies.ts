@@ -79,15 +79,27 @@ export class Policies implements OnInit, OnDestroy {
     this.sidebarOpen.update(open => !open);
   }
 
+  onCloseSidebar() {
+    this.sidebarOpen.set(false);
+  }
+
   onViewPolicy(policy: Policy) {
     this.router.navigate(['/policies', policy.id]);
   }
 
   onEditPolicy(policy: Policy) {
+    if (!this.canManagePolicy(policy)) {
+      return;
+    }
+
     this.router.navigate(['/policies', policy.id, 'edit']);
   }
 
   async onDeletePolicy(policy: Policy) {
+    if (!this.canManagePolicy(policy)) {
+      return;
+    }
+
     const confirmed = await this.confirmService.confirm({
       title: 'Delete Policy',
       message: `Are you sure you want to delete "${policy.firstName} ${policy.lastName}"?`,
@@ -129,6 +141,10 @@ export class Policies implements OnInit, OnDestroy {
     return this.policyNameMap.get(name.toString()) || name.toString();
   }
 
+  canManagePolicy(policy: Policy): boolean {
+    return !policy.isDefault;
+  }
+
   get totalPages(): number {
     return Math.ceil(this.totalCount() / this.pageSize);
   }
@@ -143,3 +159,4 @@ export class Policies implements OnInit, OnDestroy {
 
   ngOnDestroy() {}
 }
+

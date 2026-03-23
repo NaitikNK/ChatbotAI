@@ -1,0 +1,97 @@
+<div class="auth-container">
+  <div class="auth-shell">
+    <section class="auth-hero">
+      <span class="auth-kicker">Operations Desk</span>
+      <h1>Customer records, policy activity, and support in one secure platform.</h1>
+      <p>
+        Sign in to continue with policy management, or explore the assistant as a guest.
+      </p>
+
+      <div class="hero-points">
+        <div class="hero-point">
+          <strong>Shared policy ledger</strong>
+          <span>Review plans, client details, and account status from one place.</span>
+        </div>
+        <div class="hero-point">
+          <strong>Protected access</strong>
+          <span>Log in before opening sensitive policy records and edit flows.</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="auth-box">
+      <div class="auth-header">
+        <span class="auth-badge">Welcome back</span>
+        <h2>Log in</h2>
+        <p>Use your account to access policies, activity, and protected tools.</p>
+      </div>
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" formControlName="email" placeholder="Enter your email" />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="password-field">
+            <input
+              [type]="showPassword ? 'text' : 'password'"
+              id="password"
+              formControlName="password"
+              placeholder="Enter your password"
+            />
+            <button
+              type="button"
+              class="password-toggle"
+              (click)="togglePasswordVisibility()"
+              [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+            >
+              @if (showPassword) {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                  <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20C7 20 2.73 16.11 1 12c.92-2.19 2.54-4.12 4.63-5.5"></path>
+                  <path d="M10.58 10.58A2 2 0 0 0 13.42 13.42"></path>
+                  <path d="M9.88 4.24A10.94 10.94 0 0 1 12 4c5 0 9.27 3.89 11 8a11.78 11.78 0 0 1-1.67 2.68"></path>
+                  <path d="M1 1l22 22"></path>
+                </svg>
+              } @else {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              }
+            </button>
+          </div>
+        </div>
+
+        <div *ngIf="error" class="message-strip error-msg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span>{{ error }}</span>
+        </div>
+
+        <button type="submit" class="btn-primary" [disabled]="loginForm.invalid || loading">
+          {{ loading ? 'Logging in...' : 'Log in' }}
+        </button>
+      </form>
+
+      <div class="auth-divider">
+        <span>or</span>
+      </div>
+
+      <button type="button" class="btn-secondary" (click)="continueAsGuest()">
+        Continue as guest
+      </button>
+
+      <div class="auth-footer">
+        <p>
+          Don't have an account?
+          <a [routerLink]="['/signup']" [queryParams]="{ returnUrl: returnUrl }">Sign up</a>
+        </p>
+      </div>
+    </section>
+  </div>
+</div>
