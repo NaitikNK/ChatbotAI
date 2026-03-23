@@ -64,7 +64,8 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   }
 
   ngAfterViewChecked() {
-    this.scrollToBottom();
+    // Reversing requested: chats top to bottom, no auto-scroll to bottom
+    // this.scrollToBottom();
   }
 
   private scrollToBottom(): void {

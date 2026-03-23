@@ -1,68 +1,189 @@
 <div class="sidebar">
   <div class="sidebar-header">
-    <h3>Chat History</h3>
-    <div class="header-buttons">
-      <a routerLink="/policies" class="policies-sidebar-btn" aria-label="View policies" *ngIf="!isPoliciesPage()">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-          <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+    <div class="brand">
+      <div class="brand-mark">CA</div>
+      <div class="brand-copy">
+        <span class="eyebrow">Workspace</span>
+        <strong>Conversation Atlas</strong>
+      </div>
+    </div>
+
+    <button class="sidebar-toggle-btn" (click)="onCloseSidebar()" aria-label="Close sidebar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18">
+        <path d="M15 18l-6-6 6-6"></path>
+      </svg>
+    </button>
+  </div>
+
+  <div class="sidebar-scroll custom-scrollbar">
+    <!-- Removed summary-card (Open Threads) as requested -->
+
+    <div class="sidebar-actions">
+      <button class="primary-btn" (click)="onNewChat()" [disabled]="!canNewChat()" *ngIf="!showGoToChat()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        New Chat
+      </button>
+
+      <button class="ghost-btn" (click)="onDeleteAllChats()" *ngIf="!showGoToChat() && chats().length > 1">
+        Clear All
+      </button>
+
+      <button class="secondary-btn" (click)="onCreatePolicy()" *ngIf="showCreatePolicy()">
+        <span class="btn-plus">+</span>
+        Create Policy
+      </button>
+
+      <a routerLink="/policies" class="secondary-btn" *ngIf="!isPoliciesPage()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
         </svg>
         Policies
       </a>
-    </div>
-    <div class="header-buttons" *ngIf="!showGoToChat()">
-      <button (click)="onNewChat()" class="new-chat-btn" aria-label="Create new chat" [disabled]="!canNewChat()">New Chat</button>
 
-      <button
-        (click)="onDeleteAllChats()"
-        class="delete-all-btn"
-        *ngIf="chats().length > 1"
-        aria-label="Delete all chats"
-      >
-        Delete All
-      </button>
-    </div>
-    <div class="header-buttons" *ngIf="showCreatePolicy()">
-      <button (click)="onCreatePolicy()" class="new-policy-btn" aria-label="Create new policy">
-        <span>+</span> Create Policy
-      </button>
-    </div>
-    <div class="header-buttons" *ngIf="showGoToChat()">
-      <a routerLink="/chat" class="back-to-chat-btn">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-          <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+      <a routerLink="/chat" class="secondary-btn" *ngIf="showGoToChat()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <path d="M15 18l-6-6 6-6"></path>
         </svg>
         Back to Chat
       </a>
     </div>
-  </div>
-  <div class="chat-list">
-    @for (chat of chats(); track chat.id) {
-      <div
-        class="chat-item"
-        [class.active]="chat.id === currentChatId() && !!chat.title.trim()"
-        [class.untitled]="!chat.title.trim()"
-        (click)="onSelectChat(chat.id)"
-      >
-        <span class="chat-title" [style.font-style]="hasDraft(chat) ? 'italic' : 'normal'" [style.color]="hasDraft(chat) ? 'var(--primary-color)' : ''">
-          {{ chat.title || 'New Chat' }}
-          @if (hasDraft(chat)) {
-            <span style="font-size: 0.85em; opacity: 0.8; margin-left: 4px;">[Draft]</span>
-          }
-        </span>
-        @if (chat.title.trim()) {
-          <button
-            class="delete-btn"
-            (click)="onDeleteChat(chat.id, $event)"
-            aria-label="Delete chat"
-            title="Delete chat"
+
+    <div class="chat-list-header">
+      <div class="chat-list-heading">
+        <span class="section-label">Recent Sessions</span>
+        <p>Select a thread to continue where you left off.</p>
+      </div>
+    </div>
+
+    @if (chats().length === 0) {
+      <div class="empty-list">
+        <div class="empty-list-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="24" height="24">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+        </div>
+        <h4>No conversations yet</h4>
+        <p>Start a new chat and it will appear here with its draft state intact.</p>
+      </div>
+    } @else {
+      <div class="chat-list">
+        @for (chat of chats(); track chat.id) {
+          <div
+            class="chat-item"
+            [class.active]="currentChatId() === chat.id"
+            [class.untitled]="!chat.title.trim()"
+            (click)="onSelectChat(chat.id)"
           >
-            <svg class="trash-icon" viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
-              <path d="M3 6h18v2H3V6zm2 2h14v13c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2V8zm3 0h8v13H8V8zm2 2h4v9H10v-9z"/>
-              <path d="M9 4V2c0-.55.45-1 1-1h4c.55 0 1 .45 1 1v2H9z"/>
-            </svg>
-          </button>
+            <div class="chat-accent"></div>
+
+            <div class="chat-body">
+              <span class="chat-title" [class.draft]="hasDraft(chat)">
+                {{ chat.title || 'New Chat' }}
+              </span>
+              <span class="chat-meta">
+                @if (hasDraft(chat)) {
+                  Draft waiting to be sent
+                } @else if (!chat.title.trim()) {
+                  Ready for the first message
+                } @else {
+                  Saved conversation
+                }
+              </span>
+            </div>
+
+            <div class="chat-trailing">
+              @if (hasDraft(chat)) {
+                <span class="chat-tag">Draft</span>
+              }
+
+              @if (chats().length > 1) {
+                <button class="delete-btn" (click)="onDeleteChat(chat.id, $event)" title="Delete chat">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </button>
+              }
+            </div>
+          </div>
         }
       </div>
     }
+
+  </div>
+
+  <div class="sidebar-footer">
+    @if (profileMenuOpen()) {
+      <button class="menu-backdrop" (click)="closeProfileMenu()" aria-label="Close profile menu"></button>
+    }
+
+    <div class="profile-menu" [class.show]="profileMenuOpen()">
+      <div class="menu-header">
+        <div class="user-meta">
+          <div class="avatar-circle big">{{ profileInitials() }}</div>
+          <div class="user-info">
+            <span class="user-name">{{ profileName() }}</span>
+            <span class="user-id">{{ profileRole() }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-divider"></div>
+
+      <div class="menu-items">
+        <button class="menu-item" (click)="closeProfileMenu()" [routerLink]="['/profile']">
+          <div class="item-content">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span>Profile</span>
+          </div>
+        </button>
+
+          <button class="menu-item disabled">
+            <div class="item-content">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33 1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1-2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+              <span>Settings</span>
+            </div>
+            <span class="badge-secondary">Soon</span>
+          </button>
+      </div>
+
+      <div class="menu-divider"></div>
+
+      <button class="menu-item logout" (click)="onLogout()">
+        <div class="item-content">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          <span class="logout-text">Log out</span>
+        </div>
+      </button>
+    </div>
+
+    <button class="sidebar-account" (click)="toggleProfileMenu()">
+      <div class="avatar-circle">{{ profileInitials() }}</div>
+      <div class="account-details">
+        <span class="profile-name">{{ profileName() }}</span>
+        <span class="profile-role" [class.guest]="authService.isGuest()">
+          {{ profileRole() === 'Admin' ? 'Pro' : 'Free' }}
+        </span>
+      </div>
+      <div class="pro-indicator">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+          <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+      </div>
+    </button>
   </div>
 </div>

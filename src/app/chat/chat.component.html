@@ -6,73 +6,201 @@
         <span></span>
         <span></span>
       </button>
-      <h2>Chat</h2>
+
+      <div class="header-copy">
+        <span class="eyebrow">AI Console</span>
+        <h2>Conversation Studio</h2>
+        <p>
+          @if (messages().length > 0) {
+            {{ messages().length }} {{ messages().length === 1 ? 'message' : 'messages' }}
+            in this thread.
+          } @else {
+            Start a fresh conversation and the assistant will help you summarize, compare,
+            or draft.
+          }
+        </p>
+      </div>
     </div>
+
     <div class="header-actions">
+      <div class="status-pill" [class.busy]="busy()">
+        <span class="status-dot"></span>
+        {{ busy() ? 'Generating response' : 'Ready to help' }}
+      </div>
+
+      @if (messages().length > 0) {
+        <button class="clear-btn" (click)="onClearChat()" [disabled]="busy()">
+          Clear chat
+        </button>
+      }
     </div>
   </div>
+
   <div class="messages" #messagesContainer>
+    @if (messages().length === 0 && !busy()) {
+      <section class="welcome-panel">
+        <div class="welcome-copy">
+          <span class="welcome-eyebrow">Start here</span>
+          <h3>Ask about policies, coverage, claims, or next steps.</h3>
+          <p>
+            Use the assistant to turn dense information into quick answers and polished
+            follow-up replies.
+          </p>
+        </div>
+
+        <div class="welcome-grid">
+          <div class="welcome-card">
+            <span class="welcome-card-label">Summaries</span>
+            <p>Explain a policy in plain language for a customer.</p>
+          </div>
+          <div class="welcome-card">
+            <span class="welcome-card-label">Comparison</span>
+            <p>Compare plans, riders, or benefits side by side.</p>
+          </div>
+          <div class="welcome-card">
+            <span class="welcome-card-label">Drafting</span>
+            <p>Prepare professional answers, checklists, and follow-ups.</p>
+          </div>
+        </div>
+      </section>
+    }
+
     @for (message of messages(); track $index) {
-      <div class="message" [class.user]="message.role === 'user'" [class.assistant]="message.role === 'assistant'">
-        <div class="message-content">
-          @if (message.role === 'assistant') {
-            <markdown [data]="message.text"></markdown>
-          } @else {
-            {{ message.text }}
-          }
-        </div>
+      <div
+        class="message-row"
+        [class.user]="message.role === 'user'"
+        [class.assistant]="message.role === 'assistant'"
+      >
+        <div class="message-avatar">{{ message.role === 'assistant' ? 'AI' : 'You' }}</div>
 
-        <div class="message-footer">
-          <span class="timestamp">{{ message.createdAt | date:'shortTime' }}</span>
-          @if (message.role === 'assistant') {
-            <button class="icon-btn" (click)="copyMessage(message.text)" title="Copy message" aria-label="Copy">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-              </svg>
-            </button>
-          }
-        </div>
+        <div class="message">
+          <div class="message-meta">
+            <span class="message-author">
+              {{ message.role === 'assistant' ? 'Allison' : 'You' }}
+            </span>
+            <span class="timestamp">{{ message.createdAt | date:'shortTime' }}</span>
+          </div>
 
+          <div class="message-content">
+            @if (message.role === 'assistant') {
+              <markdown [data]="message.text"></markdown>
+            } @else {
+              {{ message.text }}
+            }
+          </div>
+
+          <div class="message-footer">
+            @if (message.role === 'assistant') {
+              <button
+                class="icon-btn"
+                (click)="copyMessage(message.text)"
+                title="Copy message"
+                aria-label="Copy"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  width="14"
+                  height="14"
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path
+                    d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                  ></path>
+                </svg>
+                Copy answer
+              </button>
+            }
+          </div>
+        </div>
       </div>
     }
 
     @if (busy()) {
-      <div class="message assistant typing-indicator">
-        <span></span>
-        <span></span>
-        <span></span>
+      <div class="message-row assistant typing-row">
+        <div class="message-avatar">AI</div>
+
+        <div class="message typing-card">
+          <div class="message-meta">
+            <span class="message-author">Allison</span>
+            <span class="timestamp">Thinking</span>
+          </div>
+
+          <div class="typing-indicator">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
       </div>
     }
-
   </div>
+
   <div class="input-area-wrapper">
+    <p class="composer-note">Press Enter to send. Use Shift + Enter for a new line.</p>
+
     <div class="input-container">
       <div class="add-btn-container">
-        <button class="add-btn" (click)="onPlusClick()" aria-label="Add attachment" [disabled]="busy()" title="Coming soon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+        <button
+          class="add-btn"
+          (click)="onPlusClick()"
+          aria-label="Add attachment"
+          [disabled]="busy()"
+          title="Coming soon"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            width="20"
+            height="20"
+          >
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
           </svg>
         </button>
+
         @if (showPlusTooltip()) {
-          <div class="plus-tooltip">Coming soon</div>
+          <div class="plus-tooltip">Attachments are coming soon</div>
         }
       </div>
+
       <textarea
         [ngModel]="newMessage"
         (ngModelChange)="onInputChange($event)"
         (input)="autoGrow($event)"
         (keydown.enter)="onEnterDown($event)"
-        placeholder="How can I help you today?"
+        placeholder="Ask about coverage, draft a reply, or request a summary..."
         [disabled]="busy()"
         rows="1"
         class="auto-expand"
       ></textarea>
-      
+
       <div class="input-actions">
-        <button (click)="onSendMessage()" class="send-btn" [disabled]="busy() || !newMessage.trim()" aria-label="Send message" title="Send message">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+        <button
+          (click)="onSendMessage()"
+          class="send-btn"
+          [disabled]="busy() || !newMessage.trim()"
+          aria-label="Send message"
+          title="Send message"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            width="18"
+            height="18"
+          >
             <line x1="12" y1="19" x2="12" y2="5"></line>
             <polyline points="5 12 12 5 19 12"></polyline>
           </svg>

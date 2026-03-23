@@ -53,7 +53,7 @@ export class PolicyForm implements OnInit, OnDestroy {
       email: ['', [Validators.required, Validators.email]],
       policyType: ['', [Validators.required]],
       policyName: ['', [Validators.required]],
-      phoneNumber: [''],
+      phoneNumber: ['', [Validators.pattern(/^[0-9]{10}$/)]],
       address: [''],
       city: [''],
       state: [''],
@@ -166,6 +166,10 @@ export class PolicyForm implements OnInit, OnDestroy {
     this.sidebarOpen.update(open => !open);
   }
 
+  onCloseSidebar() {
+    this.sidebarOpen.set(false);
+  }
+
   onSelectChat(chatId: string): void {
     this.chatStore.selectChat(chatId);
     this.router.navigate(['/chat']);
@@ -241,3 +245,4 @@ export class PolicyForm implements OnInit, OnDestroy {
     this.typeChangeSub?.unsubscribe();
   }
 }
+

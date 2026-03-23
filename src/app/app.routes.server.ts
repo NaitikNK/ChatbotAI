@@ -10,6 +10,18 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Client
   },
   {
+    path: 'login',
+    renderMode: RenderMode.Client
+  },
+  {
+    path: 'signup',
+    renderMode: RenderMode.Client
+  },
+  {
+    path: 'chat',
+    renderMode: RenderMode.Client
+  },
+  {
     path: '**',
     renderMode: RenderMode.Prerender
   }

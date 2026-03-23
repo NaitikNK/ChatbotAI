@@ -4,11 +4,20 @@ import { Policies } from './policies/policies';
 import { PolicyDetail } from './policy-detail/policy-detail';
 import { PolicyForm } from './policy-form/policy-form';
 
+import { LoginComponent } from './login/login.component';
+import { SignupComponent } from './signup/signup.component';
+import { ProfileComponent } from './profile/profile.component';
+import { AuthGuard } from './services/auth.guard';
+
 export const routes: Routes = [
-  { path: '', redirectTo: 'chat', pathMatch: 'full' },
+  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  { path: 'login', component: LoginComponent },
+  { path: 'signup', component: SignupComponent },
+  { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] },
   { path: 'chat', component: ChatLayout },
-  { path: 'policies', component: Policies },
-  { path: 'policies/new', component: PolicyForm },
-  { path: 'policies/:id', component: PolicyDetail },
-  { path: 'policies/:id/edit', component: PolicyForm }
+  { path: 'policies', component: Policies, canActivate: [AuthGuard] },
+  { path: 'policies/new', component: PolicyForm, canActivate: [AuthGuard] },
+  { path: 'policies/:id', component: PolicyDetail, canActivate: [AuthGuard] },
+  { path: 'policies/:id/edit', component: PolicyForm, canActivate: [AuthGuard] },
+  { path: '**', redirectTo: 'login' }
 ];

@@ -1,0 +1,161 @@
+<div class="auth-container">
+  <div class="auth-shell signup-layout">
+    <section class="auth-hero">
+      <span class="auth-kicker">New access</span>
+      <h1>Create your account and start managing policy records.</h1>
+      <p>
+        Join the platform to manage clients, review plans, and move between support and policy views.
+      </p>
+
+      <div class="hero-points">
+        <div class="hero-point">
+          <strong>Consistent workflow</strong>
+          <span>Keep policy review, account actions, and support tools in one experience.</span>
+        </div>
+        <div class="hero-point">
+          <strong>Fast onboarding</strong>
+          <span>Create your account now and continue exactly where you left off.</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="auth-box">
+      <div class="auth-header">
+        <span class="auth-badge">Create account</span>
+        <h2>Sign up</h2>
+        <p>Set up your details to unlock protected policy pages and record actions.</p>
+      </div>
+
+      <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="auth-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="firstName">First Name</label>
+            <input
+              type="text"
+              id="firstName"
+              formControlName="firstName"
+              placeholder="Enter your first name"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="lastName">Last Name</label>
+            <input
+              type="text"
+              id="lastName"
+              formControlName="lastName"
+              placeholder="Enter your last name"
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" formControlName="email" placeholder="Enter your email" />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="password-field">
+            <input
+              [type]="showPassword ? 'text' : 'password'"
+              id="password"
+              formControlName="password"
+              placeholder="Create a password"
+            />
+            <button
+              type="button"
+              class="password-toggle"
+              (click)="togglePasswordVisibility()"
+              [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+            >
+              @if (showPassword) {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                  <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20C7 20 2.73 16.11 1 12c.92-2.19 2.54-4.12 4.63-5.5"></path>
+                  <path d="M10.58 10.58A2 2 0 0 0 13.42 13.42"></path>
+                  <path d="M9.88 4.24A10.94 10.94 0 0 1 12 4c5 0 9.27 3.89 11 8a11.78 11.78 0 0 1-1.67 2.68"></path>
+                  <path d="M1 1l22 22"></path>
+                </svg>
+              } @else {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              }
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password</label>
+          <div class="password-field">
+            <input
+              [type]="showConfirmPassword ? 'text' : 'password'"
+              id="confirmPassword"
+              formControlName="confirmPassword"
+              placeholder="Confirm your password"
+            />
+            <button
+              type="button"
+              class="password-toggle"
+              (click)="toggleConfirmPasswordVisibility()"
+              [attr.aria-label]="showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'"
+            >
+              @if (showConfirmPassword) {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                  <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20C7 20 2.73 16.11 1 12c.92-2.19 2.54-4.12 4.63-5.5"></path>
+                  <path d="M10.58 10.58A2 2 0 0 0 13.42 13.42"></path>
+                  <path d="M9.88 4.24A10.94 10.94 0 0 1 12 4c5 0 9.27 3.89 11 8a11.78 11.78 0 0 1-1.67 2.68"></path>
+                  <path d="M1 1l22 22"></path>
+                </svg>
+              } @else {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              }
+            </button>
+          </div>
+        </div>
+
+        @if (signupForm.errors?.['passwordMismatch'] && (signupForm.get('confirmPassword')?.touched || signupForm.get('password')?.touched)) {
+          <div class="message-strip error-msg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <span>Passwords do not match.</span>
+          </div>
+        }
+
+        <div *ngIf="error" class="message-strip error-msg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span>{{ error }}</span>
+        </div>
+
+        <div *ngIf="success" class="message-strip success-msg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>{{ success }}</span>
+        </div>
+
+        <button type="submit" class="btn-primary" [disabled]="signupForm.invalid || loading">
+          {{ loading ? 'Signing up...' : 'Create account' }}
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        <p>
+          Already have an account?
+          <a [routerLink]="['/login']" [queryParams]="{ returnUrl: returnUrl }">Log in</a>
+        </p>
+      </div>
+    </section>
+  </div>
+</div>

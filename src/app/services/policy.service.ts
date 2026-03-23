@@ -86,7 +86,7 @@ export class PolicyService {
    */
   getPolicies(pageNumber: number = 1, pageSize: number = 10): Observable<PolicyListResponse> {
     return this.http
-      .get<any>(`${this.apiUrl}/users/list`, {
+      .get<any>(`${this.apiUrl}/policies/list`, {
         params: {
           pageNumber: pageNumber.toString(),
           pageSize: pageSize.toString()
@@ -116,7 +116,7 @@ export class PolicyService {
    * Generate a new policy number
    */
   generatePolicyNumber(): Observable<string> {
-    return this.http.get<any>(`${this.apiUrl}/users/generate-policy-number`).pipe(
+    return this.http.get<any>(`${this.apiUrl}/policies/generate-policy-number`).pipe(
       map((res) => {
         if (res.success) return res.data as string;
         throw new Error('Failed to generate policy number');
@@ -132,7 +132,7 @@ export class PolicyService {
    */
   getPolicyById(policyId: string): Observable<Policy> {
     return this.http
-      .get<any>(`${this.apiUrl}/users/${policyId}`)
+      .get<any>(`${this.apiUrl}/policies/${policyId}`)
       .pipe(
         map((res) => {
           if (!res.success) {
@@ -154,7 +154,7 @@ export class PolicyService {
    */
   getPolicyByPolicyNumber(policyNumber: string): Observable<Policy> {
     return this.http
-      .get<any>(`${this.apiUrl}/users/by-policy/${policyNumber}`)
+      .get<any>(`${this.apiUrl}/policies/by-policy/${policyNumber}`)
       .pipe(
         map((res) => {
           if (!res.success) {
@@ -176,7 +176,7 @@ export class PolicyService {
    */
   createPolicy(policy: Partial<Policy>): Observable<Policy> {
     return this.http
-      .post<any>(`${this.apiUrl}/users`, policy)
+      .post<any>(`${this.apiUrl}/policies`, policy)
       .pipe(
         map((res) => {
           if (!res.success) {
@@ -198,7 +198,7 @@ export class PolicyService {
    */
   updatePolicy(policyId: string, policy: Partial<Policy>): Observable<Policy> {
     return this.http
-      .put<any>(`${this.apiUrl}/users/${policyId}`, policy)
+      .put<any>(`${this.apiUrl}/policies/${policyId}`, policy)
       .pipe(
         map((res) => {
           if (!res.success) {
@@ -220,7 +220,7 @@ export class PolicyService {
    */
   deletePolicy(policyId: string): Observable<{ success: boolean }> {
     return this.http
-      .delete<{ success: boolean }>(`${this.apiUrl}/users/${policyId}`)
+      .delete<{ success: boolean }>(`${this.apiUrl}/policies/${policyId}`)
       .pipe(
         catchError((error) => {
           if (error instanceof Error) {
@@ -236,7 +236,7 @@ export class PolicyService {
    */
   deletePolicyByPolicyNumber(policyNumber: string): Observable<{ success: boolean }> {
     return this.http
-      .delete<{ success: boolean }>(`${this.apiUrl}/users/by-policy/${policyNumber}`)
+      .delete<{ success: boolean }>(`${this.apiUrl}/policies/by-policy/${policyNumber}`)
       .pipe(
         catchError((error) => {
           if (error instanceof Error) {
