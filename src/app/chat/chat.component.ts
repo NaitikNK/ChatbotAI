@@ -39,8 +39,21 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       if (id) {
         const draft = untracked(() => this.chatStore.currentChat().draftMessage) || '';
         this.newMessage = draft;
+        
+        // When switching chats, also scroll to bottom
+        untracked(() => {
+          setTimeout(() => this.scrollToBottom(), 100);
+        });
       }
     }, { allowSignalWrites: true });
+
+    // New messages auto-scroll effect
+    effect(() => {
+      this.messages(); // track messages signal
+      untracked(() => {
+        setTimeout(() => this.scrollToBottom(), 100);
+      });
+    });
   }
 
   onInputChange(value: string) {
@@ -64,8 +77,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   }
 
   ngAfterViewChecked() {
-    // Reversing requested: chats top to bottom, no auto-scroll to bottom
-    // this.scrollToBottom();
+    // We handle scrolling via effects to avoid jumping while typing
   }
 
   private scrollToBottom(): void {

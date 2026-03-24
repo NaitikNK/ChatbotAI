@@ -36,7 +36,6 @@ export class ChatStoreService {
   }
 
   constructor(private readonly ai: AiService) {
-    this.refreshInitialGreeting();
     this.initAuthListener();
   }
 
@@ -46,11 +45,9 @@ export class ChatStoreService {
         // User logged in: load their sessions
         this.loadPreviousSessions();
       } else {
-        // User logged out (null), and we have active sessions, reset state
-        // This ensures guest data is cleared on logout
-        if (this.chats().length > 1 || this.currentChat().messages.length > 1) {
-          this.resetToInitialState();
-        }
+        // User logged out (null): always reset state
+        // This ensures all previous user/guest data is cleared
+        this.resetToInitialState();
       }
     });
   }
@@ -60,7 +57,6 @@ export class ChatStoreService {
     const initialChat: Chat = { id: initialId, title: '', messages: [] };
     this.chats.set([initialChat]);
     this.currentChatId.set(initialId);
-    this.refreshInitialGreeting();
   }
 
   private refreshInitialGreeting() {
@@ -96,8 +92,8 @@ export class ChatStoreService {
   selectChat(chatId: string) {
     this.currentChatId.set(chatId);
     const chat = this.chats().find(c => c.id === chatId);
-    if (chat && chat.messages.length === 0) {
-      this.loadHistory(chatId);
+    if (chat && chat.messages.length === 0 && chat.backendId) {
+      this.loadHistory(chatId, chat.backendId);
     }
   }
 
@@ -107,11 +103,12 @@ export class ChatStoreService {
         this.chats.update(currentChats => {
           const newChats = [...currentChats];
           sessionIds.forEach(id => {
-            if (!newChats.find(c => c.id === id)) {
+            if (!newChats.find(c => c.backendId === id || c.id === id)) {
               newChats.push({
                 id,
                 title: 'Past Session',
-                messages: []
+                messages: [],
+                backendId: id  // Server-assigned conversationId
               });
             }
           });
@@ -121,14 +118,14 @@ export class ChatStoreService {
     });
   }
 
-  private loadHistory(chatId: string) {
+  private loadHistory(chatId: string, backendId: string) {
     this.isLoading.set(true);
-    this.ai.getHistory(chatId).subscribe({
+    this.ai.getHistory(backendId).subscribe({
       next: (history) => {
         const messages: ChatMessage[] = history
-          .filter(m => m.role === 'user' || m.role === 'assistant')
+          .filter(m => m.authorType === 'user' || m.authorType === 'assistant')
           .map(m => ({
-            role: m.role as any,
+            role: m.authorType as any,
             text: m.content,
             createdAt: new Date(m.createdAt).getTime()
           }));
@@ -175,26 +172,33 @@ export class ChatStoreService {
   onSendMessage(message: string) {
     const formattedMessage = message.trim() ? message.trim().charAt(0).toUpperCase() + message.trim().slice(1) : message;
     const chatId = this.currentChatId();
+    const chat = this.chats().find(c => c.id === chatId);
     const userMessage: ChatMessage = { role: 'user', text: formattedMessage, createdAt: Date.now() };
 
     this.chats.update(chats =>
-      chats.map(chat =>
-        chat.id === chatId
-          ? { ...chat, messages: [...chat.messages, userMessage] }
-          : chat
+      chats.map(c =>
+        c.id === chatId
+          ? { ...c, messages: [...c.messages, userMessage] }
+          : c
       )
     );
     this.updateChatTitleIfNeeded(chatId);
 
     this.isLoading.set(true);
-    this.ai.chat(formattedMessage).subscribe({
-      next: (answer) => {
-        const assistantMessage: ChatMessage = { role: 'assistant', text: answer, createdAt: Date.now() };
+    // Send the backend-assigned conversationId if we have it, otherwise let the backend generate one
+    const backendConversationId = chat?.backendId;
+    this.ai.chat(formattedMessage, backendConversationId).subscribe({
+      next: (response) => {
+        const assistantMessage: ChatMessage = { role: 'assistant', text: response.answer, createdAt: Date.now() };
         this.chats.update(chats =>
-          chats.map(chat =>
-            chat.id === chatId
-              ? { ...chat, messages: [...chat.messages, assistantMessage] }
-              : chat
+          chats.map(c =>
+            c.id === chatId
+              ? { 
+                  ...c, 
+                  messages: [...c.messages, assistantMessage],
+                  backendId: c.backendId || response.conversationId  // Store the backend ID on first response
+                }
+              : c
           )
         );
         this.updateChatTitleIfNeeded(chatId);
@@ -208,10 +212,10 @@ export class ChatStoreService {
           createdAt: Date.now()
         };
         this.chats.update(chats =>
-          chats.map(chat =>
-            chat.id === chatId
-              ? { ...chat, messages: [...chat.messages, assistantMessage] }
-              : chat
+          chats.map(c =>
+            c.id === chatId
+              ? { ...c, messages: [...c.messages, assistantMessage] }
+              : c
           )
         );
         this.updateChatTitleIfNeeded(chatId);
@@ -283,29 +287,33 @@ export class ChatStoreService {
   onClearChat() {
     this.isLoading.set(true);
     const chatId = this.currentChatId();
+    const chat = this.chats().find(c => c.id === chatId);
+    const backendId = chat?.backendId;
 
-    // Clear messages immediately while loading greeting
+    // Clear messages and reset backendId so next message starts a new conversation
     this.chats.update(chats =>
-      chats.map(chat =>
-        chat.id === chatId
-        ? { ...chat, title: '', messages: [], draftMessage: undefined }
-        : chat
+      chats.map(c =>
+        c.id === chatId
+        ? { ...c, title: '', messages: [], draftMessage: undefined, backendId: undefined }
+        : c
       )
     );
     
-    // Persistent clear
-    this.ai.deleteHistory(chatId).subscribe({
-      error: (err) => console.error('Failed to clear chat in DB', err)
-    });
+    // Persistent clear (use backendId for the API call)
+    if (backendId) {
+      this.ai.deleteHistory(backendId).subscribe({
+        error: (err) => console.error('Failed to clear chat in DB', err)
+      });
+    }
 
     this.ai.getGreeting().subscribe({
       next: (greeting) => {
         this.greetingMessageText = greeting;
         this.chats.update(chats =>
-          chats.map(chat =>
-            chat.id === chatId
-            ? { ...chat, title: '', messages: [this.createGreetingMessage(greeting)], draftMessage: undefined }
-            : chat
+          chats.map(c =>
+            c.id === chatId
+            ? { ...c, title: '', messages: [this.createGreetingMessage(greeting)], draftMessage: undefined }
+            : c
           )
         );
         this.isLoading.set(false);
@@ -313,10 +321,10 @@ export class ChatStoreService {
       error: () => {
         const defaultText = "Hello! How can I help you today?";
         this.chats.update(chats =>
-          chats.map(chat =>
-            chat.id === chatId
-            ? { ...chat, title: '', messages: [this.createGreetingMessage(defaultText)], draftMessage: undefined }
-            : chat
+          chats.map(c =>
+            c.id === chatId
+            ? { ...c, title: '', messages: [this.createGreetingMessage(defaultText)], draftMessage: undefined }
+            : c
           )
         );
         this.isLoading.set(false);
@@ -328,16 +336,21 @@ export class ChatStoreService {
     const chats = this.chats();
     if (chats.length <= 1) return;
     
-    // Persistent delete from DB
-    this.ai.deleteHistory(chatId).subscribe({
-      error: (err) => console.error('Failed to delete chat in DB', err)
-    });
+    const chat = chats.find(c => c.id === chatId);
+    const backendId = chat?.backendId;
+
+    // Persistent delete from DB (use backendId for the API call)
+    if (backendId) {
+      this.ai.deleteHistory(backendId).subscribe({
+        error: (err) => console.error('Failed to delete chat in DB', err)
+      });
+    }
 
     if (chatId === this.currentChatId()) {
-      const remainingChats = chats.filter(chat => chat.id !== chatId);
+      const remainingChats = chats.filter(c => c.id !== chatId);
       this.currentChatId.set(remainingChats[0].id);
     }
-    this.chats.set(chats.filter(chat => chat.id !== chatId));
+    this.chats.set(chats.filter(c => c.id !== chatId));
   }
 
   deleteAllChats() {

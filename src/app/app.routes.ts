@@ -15,6 +15,7 @@ export const routes: Routes = [
   { path: 'signup', component: SignupComponent },
   { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] },
   { path: 'chat', component: ChatLayout },
+  { path: 'users', loadComponent: () => import('./users/users.component').then(m => m.UsersComponent), canActivate: [AuthGuard] },
   { path: 'policies', component: Policies, canActivate: [AuthGuard] },
   { path: 'policies/new', component: PolicyForm, canActivate: [AuthGuard] },
   { path: 'policies/:id', component: PolicyDetail, canActivate: [AuthGuard] },

@@ -1,0 +1,178 @@
+<div class="users-container">
+  <div class="users-shell">
+    <div class="users-header">
+      <div class="header-left">
+        <div class="header-copy">
+          <span class="eyebrow">Admin Panel</span>
+          <h1>User Management</h1>
+          <p>Manage application users, update credentials, and control access levels.</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="back-btn" (click)="onClose()" aria-label="Close user management">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          Close
+        </button>
+      </div>
+    </div>
+
+    @if (loading()) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading user database...</p>
+      </div>
+    } @else {
+      <div class="users-grid-wrapper">
+        <div class="table-toolbar">
+          <div>
+            <span class="section-label">Team Directory</span>
+            <h2>Access & account controls</h2>
+          </div>
+          <div class="toolbar-chip">{{ users().length }} active records</div>
+        </div>
+
+        <div class="table-container">
+          <table class="users-table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (user of users(); track user.id) {
+                <tr>
+                  <td data-label="User">
+                    <div class="user-info">
+                      <div class="user-avatar">{{ user.firstName[0] }}{{ user.lastName[0] }}</div>
+                      <div class="user-name-wrap">
+                        <span class="full-name">{{ user.firstName }} {{ user.lastName }}</span>
+                        @if (user.isDefault) {
+                          <span class="badge-seeded">Seeded account</span>
+                        }
+                      </div>
+                    </div>
+                  </td>
+                  <td data-label="Email">
+                    <span class="email-copy">{{ user.email }}</span>
+                  </td>
+                  <td data-label="Role">
+                    <span class="role-badge" [class.admin]="user.roleName === 'Admin'">
+                      {{ user.roleName }}
+                    </span>
+                  </td>
+                  <td data-label="Actions">
+                    <div class="actions">
+                      <button class="action-btn" (click)="openEdit(user)" title="Edit User">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                      </button>
+                      <button class="action-btn" (click)="openPassword(user)" title="Change Password">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                      </button>
+                      @if (!user.isDefault) {
+                        <button class="action-btn delete" (click)="openDelete(user)" title="Delete User">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                          </svg>
+                        </button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Edit Modal -->
+  @if (activeModal() === 'edit') {
+    <div class="modal-overlay" (click)="closeModal()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Edit User</h3>
+          <button (click)="closeModal()">&times;</button>
+        </div>
+        <form [formGroup]="editForm" (ngSubmit)="onSaveUser()">
+          <div class="modal-body">
+            <div class="form-group">
+              <label>First Name</label>
+              <input type="text" formControlName="firstName" />
+            </div>
+            <div class="form-group">
+              <label>Last Name</label>
+              <input type="text" formControlName="lastName" />
+            </div>
+            
+            @if (selectedUser()?.roleName !== 'Admin') {
+              <div class="form-group">
+                <label>Role</label>
+                <div class="select-wrap">
+                  <select formControlName="roleId">
+                    <option [value]="1">Admin</option>
+                    <option [value]="2">User</option>
+                  </select>
+                </div>
+              </div>
+            }
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-ghost" (click)="closeModal()">Cancel</button>
+            <button type="submit" class="btn-primary" [disabled]="editForm.invalid || actionLoading()">
+              {{ actionLoading() ? 'Saving...' : 'Save Changes' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Password Modal -->
+  @if (activeModal() === 'password') {
+    <div class="modal-overlay" (click)="closeModal()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Change Password</h3>
+          <p class="modal-subtitle">Resetting password for {{ selectedUser()?.firstName }}</p>
+          <button (click)="closeModal()">&times;</button>
+        </div>
+        <form [formGroup]="passwordForm" (ngSubmit)="onSavePassword()">
+          <div class="modal-body">
+            <div class="form-group">
+              <label>New Password</label>
+              <input type="password" formControlName="newPassword" placeholder="Minimum 4 characters" />
+            </div>
+            <div class="form-group">
+              <label>Confirm Password</label>
+              <input type="password" formControlName="confirmPassword" placeholder="Repeat new password" />
+            </div>
+            @if (passwordForm.errors?.['mismatch'] && passwordForm.touched) {
+              <p class="error-text">Passwords do not match.</p>
+            }
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-ghost" (click)="closeModal()">Cancel</button>
+            <button type="submit" class="btn-primary" [disabled]="passwordForm.invalid || actionLoading()">
+              {{ actionLoading() ? 'Updating...' : 'Update Password' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

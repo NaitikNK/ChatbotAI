@@ -1,39 +1,87 @@
 .loader-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 3px;
+  top: 1rem;
+  left: 1rem;
+  right: 1rem;
+  display: flex;
+  justify-content: center;
   z-index: 9999;
   pointer-events: none;
 }
 
-.progress-bar {
-  width: 100%;
-  height: 100%;
-  background: rgba(59, 130, 246, 0.24);
+.loader-track {
+  position: relative;
+  width: min(100%, 28rem);
+  height: 0.45rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(37, 99, 235, 0.16), rgba(20, 184, 166, 0.14));
+  border: 1px solid rgba(255, 255, 255, 0.52);
+  box-shadow:
+    0 10px 26px -18px rgba(15, 23, 42, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(10px);
   overflow: hidden;
 }
 
 .progress-fill {
-  height: 100%;
-  background: #3b82f6;
-  width: 0;
-  animation: progress 2s ease-in-out infinite;
-  transform-origin: 0% 50%;
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 38%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--primary-color), #188a80, var(--secondary-color));
+  box-shadow: 0 0 18px rgba(37, 99, 235, 0.42);
+  animation: loader-slide 1.35s cubic-bezier(0.37, 0, 0.63, 1) infinite;
 }
 
-@keyframes progress {
+.progress-glow {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 22%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 0.82),
+    rgba(255, 255, 255, 0)
+  );
+  mix-blend-mode: screen;
+  animation: loader-shine 1.35s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+}
+
+@keyframes loader-slide {
   0% {
-    width: 0;
-    transform: translateX(0);
-  }
-  50% {
-    width: 30%;
-    transform: translateX(100%);
+    transform: translateX(-115%);
   }
   100% {
-    width: 0;
-    transform: translateX(333%);
+    transform: translateX(365%);
+  }
+}
+
+@keyframes loader-shine {
+  0% {
+    transform: translateX(-180%);
+    opacity: 0.25;
+  }
+  40% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateX(520%);
+    opacity: 0.2;
+  }
+}
+
+@media (max-width: 768px) {
+  .loader-overlay {
+    top: 0.75rem;
+    left: 0.75rem;
+    right: 0.75rem;
+  }
+
+  .loader-track {
+    width: 100%;
   }
 }

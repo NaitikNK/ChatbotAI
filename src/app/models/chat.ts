@@ -11,5 +11,6 @@ export interface Chat {
   title: string;
   messages: ChatMessage[];
   draftMessage?: string;
+  backendId?: string; // The server-assigned conversationId for persistence
 }
 

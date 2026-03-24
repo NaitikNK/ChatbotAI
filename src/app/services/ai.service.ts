@@ -21,7 +21,7 @@ interface GenericApiResponse<T> {
 }
 
 export interface ChatMessageResponse {
-  role: string;
+  authorType: string;
   content: string;
   createdAt: string;
 }
@@ -42,22 +42,24 @@ export class AiService {
     return headers;
   }
 
-  chat(message: string): Observable<string> {
+  chat(message: string, conversationId?: string): Observable<{ answer: string; conversationId: string }> {
+    const body: any = { message };
+    if (conversationId) {
+      body.conversationId = conversationId;
+    }
     return this.http
-      .post<ChatApiResponse>(`${this.apiUrl}/ai/chat`, { message }, { headers: this.getHeaders() })
+      .post<ChatApiResponse>(`${this.apiUrl}/ai/chat`, body, { headers: this.getHeaders() })
       .pipe(
         map((res) => {
           if (!res.success) {
             throw new Error(res.error || 'An unexpected error occurred');
           }
-          return res.data.answer;
+          return { answer: res.data.answer, conversationId: res.data.conversationId };
         }),
         catchError((error) => {
-          // If it's already an error we threw, rethrow it
           if (error instanceof Error) {
             return throwError(() => error);
           }
-          // Otherwise it's an HTTP error, handle it
           return throwError(() => error);
         })
       );

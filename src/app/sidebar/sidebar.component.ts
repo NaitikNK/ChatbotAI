@@ -27,8 +27,14 @@ export class SidebarComponent {
 
   public readonly authService = inject(AuthService);
   profileMenuOpen = signal(false);
+  showSidebarTooltip = signal(false);
 
   constructor(private readonly router: Router) {}
+
+  onSidebarToggleClick() {
+    this.showSidebarTooltip.set(true);
+    setTimeout(() => this.showSidebarTooltip.set(false), 2000);
+  }
 
   onLogout() {
     this.profileMenuOpen.set(false);
