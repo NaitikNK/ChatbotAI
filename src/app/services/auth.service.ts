@@ -79,8 +79,7 @@ export class AuthService {
   }
 
   updateProfile(profile: { firstName: string; lastName: string }): Observable<any> {
-    const headers = { 'X-User-Id': this.currentUserValue?.id?.toString() || '' };
-    return this.http.put<any>(`${this.apiUrl}/profile`, profile, { headers }).pipe(
+    return this.http.put<any>(`${this.apiUrl}/profile`, profile).pipe(
       tap((response) => {
         if (response && response.user) {
           this.updateUser(response.user);
