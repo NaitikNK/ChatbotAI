@@ -50,16 +50,16 @@ export class PolicyForm implements OnInit, OnDestroy {
       firstName: ['', [Validators.required]],
       lastName: ['', [Validators.required]],
       policyNumber: ['', [Validators.required]],
-      email: ['', [Validators.required, Validators.email]],
+      email: ['', [Validators.required, Validators.email, this.endsWithCom]],
       policyType: ['', [Validators.required]],
       policyName: ['', [Validators.required]],
-      phoneNumber: ['', [Validators.pattern(/^[0-9]{10}$/)]],
+      phoneNumber: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
       address: [''],
       city: [''],
       state: [''],
-      postalCode: [''],
+      postalCode: ['', [Validators.required, Validators.pattern(/^[0-9]{5,6}$/)]],
       country: [''],
-      dateOfBirth: ['', []]
+      dateOfBirth: ['', [Validators.required, this.atLeastOneYearOld]]
     });
 
     // Handle policy type changes
@@ -239,6 +239,33 @@ export class PolicyForm implements OnInit, OnDestroy {
 
   onCancel(): void {
     this.router.navigate(['/policies']);
+  }
+
+  private endsWithCom(control: any) {
+    const email = control.value;
+    if (email && !email.toLowerCase().endsWith('.com')) {
+      return { notCom: true };
+    }
+    return null;
+  }
+
+  private atLeastOneYearOld(control: any) {
+    if (!control.value) return null;
+    const dob = new Date(control.value);
+    const today = new Date();
+    
+    if (dob > today) {
+      return { futureDate: true };
+    }
+
+    const ageLimit = new Date();
+    ageLimit.setFullYear(today.getFullYear() - 1);
+    
+    if (dob > ageLimit) {
+      return { tooYoung: true };
+    }
+    
+    return null;
   }
 
   ngOnDestroy() {
